@@ -25,22 +25,20 @@ import java.util.Set;
 
 public class SelectDeviceActivity extends AppCompatActivity {
 
-
+    @SuppressLint("MissingPermission")
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_device);
         // Bluetooth Setup
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        // Get List of Paired Bluetooth Device
-
-         @SuppressLint("MissingPermission") Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         List<Object> deviceList = new ArrayList<>();
         if (pairedDevices.size() > 0) {
             // There are paired devices. Get the name and address of each paired device.
             for (BluetoothDevice device : pairedDevices) {
-                @SuppressLint("MissingPermission") String deviceName = device.getName();
+                String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
                 DeviceInfoModel deviceInfoModel = new DeviceInfoModel(deviceName,deviceHardwareAddress);
                 deviceList.add(deviceInfoModel);
