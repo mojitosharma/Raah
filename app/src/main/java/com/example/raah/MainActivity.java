@@ -1,5 +1,6 @@
 package com.example.raah;
 
+import androidx.activity.result.ActivityResultCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,6 +8,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -50,12 +52,14 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
     private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
+    boolean isAllPermissionsAvailable=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
+        final Button buttonConnect = findViewById(R.id.buttonConnect);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
             switch (ContextCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION)) {
                 case PackageManager.PERMISSION_DENIED:
@@ -66,19 +70,9 @@ public class MainActivity extends AppCompatActivity {
                 case PackageManager.PERMISSION_GRANTED:
                     break;
             }
-            switch (ContextCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.BLUETOOTH_CONNECT)) {
-                case PackageManager.PERMISSION_DENIED:
-                    if (ContextCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-                    }
-                    break;
-                case PackageManager.PERMISSION_GRANTED:
-                    break;
-           }
         }
 
         // UI Initialization
-        final Button buttonConnect = findViewById(R.id.buttonConnect);
         final Toolbar toolbar = findViewById(R.id.toolbar);
         final ProgressBar progressBar = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
@@ -149,36 +143,53 @@ public class MainActivity extends AppCompatActivity {
         };
 
         // Select Bluetooth Device
-        buttonConnect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Move to adapter list
-                Intent intent = new Intent(MainActivity.this, SelectDeviceActivity.class);
-                startActivity(intent);
+        buttonConnect.setOnClickListener(view -> {
+            // Move to adapter list
+            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (mBluetoothAdapter == null) {
+                // Device does not support Bluetooth
+                Toast.makeText(mContext, "Bluetooth not detected :(", Toast.LENGTH_SHORT).show();
+            } else if (!mBluetoothAdapter.isEnabled()) {
+                // Bluetooth is not enabled :)
+                Toast.makeText(mContext, "Bluetooth not enabled. Please enable bluetooth to proceed", Toast.LENGTH_SHORT).show();
+            } else {
+                // Bluetooth is enabled
+                switch (ContextCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.BLUETOOTH_CONNECT)) {
+                    case PackageManager.PERMISSION_DENIED:
+                        if (ContextCompat.checkSelfPermission(getBaseContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.BLUETOOTH_CONNECT}, 1);
+                        }
+                        break;
+                    case PackageManager.PERMISSION_GRANTED:
+                        isAllPermissionsAvailable=true;
+
+                        break;
+                }
+                if(isAllPermissionsAvailable){
+                    Intent intent = new Intent(MainActivity.this, SelectDeviceActivity.class);
+                    startActivity(intent);
+                }
             }
         });
 
         // Button to ON/OFF LED on Arduino Board
-        buttonToggle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String cmdText = null;
-                String btnState = buttonToggle.getText().toString().toLowerCase();
-                switch (btnState){
-                    case "turn on":
-                        buttonToggle.setText("Turn Off");
-                        // Command to turn on LED on Arduino. Must match with the command in Arduino code
-                        cmdText = "<turn on>";
-                        break;
-                    case "turn off":
-                        buttonToggle.setText("Turn On");
-                        // Command to turn off LED on Arduino. Must match with the command in Arduino code
-                        cmdText = "<turn off>";
-                        break;
-                }
-                // Send command to Arduino board
-                connectedThread.write(cmdText);
+        buttonToggle.setOnClickListener(view -> {
+            String cmdText = null;
+            String btnState = buttonToggle.getText().toString().toLowerCase();
+            switch (btnState){
+                case "turn on":
+                    buttonToggle.setText("Turn Off");
+                    // Command to turn on LED on Arduino. Must match with the command in Arduino code
+                    cmdText = "<turn on>";
+                    break;
+                case "turn off":
+                    buttonToggle.setText("Turn On");
+                    // Command to turn off LED on Arduino. Must match with the command in Arduino code
+                    cmdText = "<turn off>";
+                    break;
             }
+            // Send command to Arduino board
+            connectedThread.write(cmdText);
         });
     }
 
@@ -280,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
                     Read from the InputStream from Arduino until termination character is reached.
                     Then send the whole String message to GUI Handler.
                      */
-                    buffer[bytes] = (byte) mmInStream.read();
+                        buffer[bytes] = (byte) mmInStream.read();
                     String readMessage;
                     if (buffer[bytes] == '\n'){
                         readMessage = new String(buffer,0,bytes);

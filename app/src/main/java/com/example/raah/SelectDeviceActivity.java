@@ -53,15 +53,12 @@ public class SelectDeviceActivity extends AppCompatActivity {
             View view = findViewById(R.id.recyclerViewDevice);
             Snackbar snackbar = Snackbar.make(view, "Activate Bluetooth or pair a Bluetooth device", Snackbar.LENGTH_INDEFINITE);
 
-            snackbar.setAction("OK", new View.OnClickListener() {
-                @Override
-                public void onClick(View view) { }
-            });
+            snackbar.setAction("OK", view1 -> { });
             snackbar.show();
         }
 
-    }
 
+    }
 //    @Override
 //    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 //        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
