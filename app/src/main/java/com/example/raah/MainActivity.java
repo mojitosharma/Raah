@@ -50,15 +50,17 @@ public class MainActivity extends AppCompatActivity {
 
     private String deviceName = null;
     private String deviceAddress;
-    private static Context mContext;public static Handler handler;
+    private static Context mContext;
+    public static Handler handler;
     public static BluetoothSocket mmSocket;
+    public static int returned_value = 0;
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
     private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
-    private static Button startButton;
+    private static Button startButton, buttonConnect;
     boolean isAllPermissionsAvailable=false;
     String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN};
 
-    private BluetoothService mBluetoothService;
+    private static BluetoothService mBluetoothService;
     private boolean mBound = false;
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -96,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
         startButton = findViewById(R.id.startButton);
         startButton.setEnabled(false);
-        final Button buttonConnect = findViewById(R.id.buttonConnect);
+        buttonConnect = findViewById(R.id.buttonConnect);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
             if (!checkPermission(permissions)) {
                 ActivityCompat.requestPermissions(this, permissions, 1);
@@ -145,6 +147,15 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        if(returned_value == 1){
+            handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
+            runOnUiThread((Runnable) () -> buttonConnect.setEnabled(true));
+            runOnUiThread((Runnable) () -> startButton.setEnabled(true));
+        }
+        else if(returned_value == -1){
+            handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
+        }
+
 
         // Select Bluetooth Device
         buttonConnect.setOnClickListener(view -> {
@@ -189,19 +200,19 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     private void connectBluetoothDevice(BluetoothAdapter bluetoothAdapter, String address) {
         BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
-        BluetoothSocket tmp = null;
         UUID uuid = bluetoothDevice.getUuids()[0].getUuid();
         if(mBluetoothService == null){
             Toast.makeText(this, "null error", Toast.LENGTH_SHORT).show();
-
         }
-        int returned_value = mBluetoothService.connectBluetooth(uuid, address);
-        if(returned_value == 1){
-            handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
-            runOnUiThread((Runnable) () -> startButton.setEnabled(true));
-        }
-        else{
-            handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
+        else {
+            returned_value = mBluetoothService.connectBluetooth(uuid, address);
+            if (returned_value == 1) {
+                handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
+                runOnUiThread((Runnable) () -> startButton.setEnabled(true));
+                runOnUiThread((Runnable) () -> buttonConnect.setEnabled(true));
+            } else {
+                handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
+            }
         }
     }
 

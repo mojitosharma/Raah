@@ -57,8 +57,8 @@ public class BluetoothService extends Service {
             mBluetoothAdapter.cancelDiscovery();
             mBluetoothSocket.connect();
             Log.e("Status", "Device connected");
-            mInputStream = mBluetoothSocket.getInputStream();
-            mOutputStream = mBluetoothSocket.getOutputStream();
+//            mInputStream = mBluetoothSocket.getInputStream();
+//            mOutputStream = mBluetoothSocket.getOutputStream();
             return 1;
         } catch (IOException connectException) {
             connectException.printStackTrace();
