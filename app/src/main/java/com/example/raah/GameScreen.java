@@ -8,10 +8,13 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
@@ -39,6 +42,23 @@ public class GameScreen extends AppCompatActivity {
     private String deviceAddress;
     private TextView textViewInfo;
     private List<Float> mReceivedData = new ArrayList<>();
+
+    private BluetoothService mBluetoothService;
+    private boolean mBound = false;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder) iBinder;
+            mBluetoothService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mBound = false;
+        }
+    };
 
     @SuppressLint("MissingPermission")
     @Override

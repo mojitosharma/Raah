@@ -48,8 +48,6 @@ import static android.content.ContentValues.TAG;
 @RequiresApi(api = Build.VERSION_CODES.S)
 public class MainActivity extends AppCompatActivity {
 
-
-    public static CreateConnectThread createConnectThread;
     private String deviceName = null;
     private String deviceAddress;
     private static Context mContext;public static Handler handler;
@@ -110,9 +108,14 @@ public class MainActivity extends AppCompatActivity {
             selected device (see the thread code below)
              */
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
-            createConnectThread.start();
+//            createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
+//            createConnectThread.start();
+            connectBluetoothDevice(bluetoothAdapter, deviceAddress);
         }
+
+        // connecting to binded service
+        Intent serviceintent = new Intent(this, BluetoothService.class);
+        bindService(serviceintent, mConnection, Context.BIND_AUTO_CREATE);
 
         handler = new Handler(Looper.getMainLooper()) {
             @Override
@@ -163,14 +166,29 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         unbindService(mConnection);
         mBound = false;
     }
 
-    private void connectBluetoothDevice() {
-        mBluetoothService.connectBluetooth();
+
+    @SuppressLint("MissingPermission")
+    private void connectBluetoothDevice(BluetoothAdapter bluetoothAdapter, String address) {
+        BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
+        BluetoothSocket tmp = null;
+        UUID uuid = bluetoothDevice.getUuids()[0].getUuid();
+        String macAddress = "DEVICE_MAC_ADDRESS_HERE";
+        int returned_value = mBluetoothService.connectBluetooth(uuid, macAddress);
+        if(returned_value == 1){
+            handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
+            runOnUiThread((Runnable) () -> startButton.setEnabled(true));
+        }
+        else if(returned_value == -1){
+            handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
+
+        }
     }
 
     private void disconnectBluetoothDevice() {
@@ -187,76 +205,12 @@ public class MainActivity extends AppCompatActivity {
         }
         return true;
     }
-    @SuppressLint("MissingPermission")
-    public class CreateConnectThread extends Thread {
 
-        public CreateConnectThread(BluetoothAdapter bluetoothAdapter, String address) {
-            /*
-            Use a temporary object that is later assigned to mmSocket
-            because mmSocket is final.
-             */
-            BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
-            BluetoothSocket tmp = null;
-            UUID uuid = bluetoothDevice.getUuids()[0].getUuid();
-
-            try {
-                /*
-                Get a BluetoothSocket to connect with the given BluetoothDevice.
-                Due to Android device varieties,the method below may not work fo different devices.
-                You should try using other methods i.e. :
-                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-                 */
-                tmp = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(uuid);
-
-            } catch (IOException e) {
-                Log.e(TAG, "Socket's create() method failed", e);
-            }
-            mmSocket = tmp;
-        }
-
-        public void run() {
-            // Cancel discovery because it otherwise slows down the connection.
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            bluetoothAdapter.cancelDiscovery();
-            try {
-                // Connect to the remote device through the socket. This call blocks
-                // until it succeeds or throws an exception.
-                mmSocket.connect();
-                Log.e("Status", "Device connected");
-                handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
-            } catch (IOException connectException) {
-                // Unable to connect; close the socket and return.
-                try {
-                    mmSocket.close();
-                    Log.e("Status", "Cannot connect to device");
-                    handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
-                } catch (IOException closeException) {
-                    Log.e(TAG, "Could not close the client socket", closeException);
-                }
-                return;
-            }
-
-            // The connection attempt succeeded. Perform work associated with
-            // the connection in a separate thread.
-            runOnUiThread((Runnable) () -> startButton.setEnabled(true));
-        }
-
-        // Closes the client socket and causes the thread to finish.
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Could not close the client socket", e);
-            }
-        }
-    }
     /* ============================ Terminate Connection at BackPress ====================== */
     @Override
     public void onBackPressed() {
         // Terminate Bluetooth Connection and close app
-        if (createConnectThread != null){
-            createConnectThread.cancel();
-        }
+        disconnectBluetoothDevice();
         Intent a = new Intent(Intent.ACTION_MAIN);
         a.addCategory(Intent.CATEGORY_HOME);
         a.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
