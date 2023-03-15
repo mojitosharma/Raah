@@ -2,6 +2,7 @@ package com.example.raah;
 
 import androidx.activity.result.ActivityResultCallback;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -18,11 +19,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -39,6 +42,7 @@ import java.util.UUID;
 
 import static android.content.ContentValues.TAG;
 
+@RequiresApi(api = Build.VERSION_CODES.S)
 public class MainActivity extends AppCompatActivity {
 
 
@@ -51,24 +55,20 @@ public class MainActivity extends AppCompatActivity {
     private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
     private static Button startButton;
     boolean isAllPermissionsAvailable=false;
+    String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN};
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
-        startButton.setEnabled(false);
         startButton = findViewById(R.id.startButton);
+        startButton.setEnabled(false);
         final Button buttonConnect = findViewById(R.id.buttonConnect);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
-            switch (ContextCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                case PackageManager.PERMISSION_DENIED:
-                    if (ContextCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-                    }
-                    break;
-                case PackageManager.PERMISSION_GRANTED:
-                    break;
+            if (!checkPermission(permissions)) {
+                ActivityCompat.requestPermissions(this, permissions, 1);
             }
         }
 
@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
         deviceName = getIntent().getStringExtra("deviceName");
         if (deviceName != null){
+            Toast.makeText(this, deviceName, Toast.LENGTH_SHORT).show();
             // Get the device address to make BT Connection
             deviceAddress = getIntent().getStringExtra("deviceAddress");
             // Show progree and connection status
@@ -123,22 +124,13 @@ public class MainActivity extends AppCompatActivity {
                 // Bluetooth is not enabled :)
                 Toast.makeText(mContext, "Bluetooth not enabled. Please enable bluetooth to proceed", Toast.LENGTH_SHORT).show();
             } else {
-                // Bluetooth is enabled
-                switch (ContextCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.BLUETOOTH_CONNECT)) {
-                    case PackageManager.PERMISSION_DENIED:
-                        if (ContextCompat.checkSelfPermission(getBaseContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.BLUETOOTH_CONNECT}, 1);
-                        }
-                        break;
-                    case PackageManager.PERMISSION_GRANTED:
-                        isAllPermissionsAvailable=true;
-
-                        break;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
+                    if (!checkPermission(permissions)) {
+                        ActivityCompat.requestPermissions(this, permissions, 1);
+                    }
                 }
-                if(isAllPermissionsAvailable){
-                    Intent intent = new Intent(MainActivity.this, SelectDeviceActivity.class);
-                    startActivity(intent);
-                }
+                Intent intent = new Intent(MainActivity.this, SelectDeviceActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -152,8 +144,19 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+    public boolean checkPermission(String[] permissions){
+        if (permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(getBaseContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     @SuppressLint("MissingPermission")
-    public static class CreateConnectThread extends Thread {
+    public class CreateConnectThread extends Thread {
 
         public CreateConnectThread(BluetoothAdapter bluetoothAdapter, String address) {
             /*
@@ -203,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
 
             // The connection attempt succeeded. Perform work associated with
             // the connection in a separate thread.
-            startButton.setEnabled(true);
+            runOnUiThread((Runnable) () -> startButton.setEnabled(true));
         }
 
         // Closes the client socket and causes the thread to finish.
@@ -231,10 +234,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == 1) {
+
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 return;
+
+            } else {
+
+                Toast.makeText(this, "Please allow the Permission", Toast.LENGTH_SHORT).show();
+
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
+    };
 }
