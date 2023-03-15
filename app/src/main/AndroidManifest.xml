@@ -27,7 +27,7 @@
         android:theme="@style/Theme.Raah"
         tools:targetApi="31">
         <service
-            android:name=".Connection_service"
+            android:name=".BluetoothService"
             android:enabled="true"
             android:exported="true"></service>
 

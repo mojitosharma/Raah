@@ -82,34 +82,34 @@ public class BluetoothService extends Service {
         }
     }
 
-    public void sendCommand(String command) {
-        try {
-            mOutputStream.write(command.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void sendCommand(String command) {
+//        try {
+//            mOutputStream.write(command.getBytes());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    public String readData() {
+//        byte[] buffer = new byte[1024];
+//        int bytes;
+//
+//        try {
+//            bytes = mInputStream.read(buffer);
+//            return new String(buffer, 0, bytes);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 
-    public String readData() {
-        byte[] buffer = new byte[1024];
-        int bytes;
-
-        try {
-            bytes = mInputStream.read(buffer);
-            return new String(buffer, 0, bytes);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        try {
-            mBluetoothSocket.close();
-        } catch (IOException e) {
-            Log.e(TAG, "Could not close the client socket", e);
-        }
-    }
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        try {
+//            mBluetoothSocket.close();
+//        } catch (IOException e) {
+//            Log.e(TAG, "Could not close the client socket", e);
+//        }
+//    }
 }

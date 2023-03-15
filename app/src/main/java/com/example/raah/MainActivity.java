@@ -66,6 +66,12 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder) iBinder;
             mBluetoothService = binder.getService();
+            if(mBluetoothService == null){
+                Log.i("onServiceConnected", "why null");
+            }
+            else{
+                Log.i("onServiceConnected", "not null here");
+            }
             mBound = true;
         }
 
@@ -81,6 +87,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
+
+        // connecting to binded service
+        Intent serviceintent = new Intent(this, BluetoothService.class);
+        startService(serviceintent);
+        bindService(serviceintent, mConnection, Context.BIND_AUTO_CREATE);
+
+
         startButton = findViewById(R.id.startButton);
         startButton.setEnabled(false);
         final Button buttonConnect = findViewById(R.id.buttonConnect);
@@ -113,9 +126,6 @@ public class MainActivity extends AppCompatActivity {
             connectBluetoothDevice(bluetoothAdapter, deviceAddress);
         }
 
-        // connecting to binded service
-        Intent serviceintent = new Intent(this, BluetoothService.class);
-        bindService(serviceintent, mConnection, Context.BIND_AUTO_CREATE);
 
         handler = new Handler(Looper.getMainLooper()) {
             @Override
@@ -169,8 +179,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mConnection);
-        mBound = false;
+        if(mBound){
+            unbindService(mConnection);
+            mBound = false;
+        }
     }
 
 
@@ -179,15 +191,17 @@ public class MainActivity extends AppCompatActivity {
         BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
         BluetoothSocket tmp = null;
         UUID uuid = bluetoothDevice.getUuids()[0].getUuid();
-        String macAddress = "DEVICE_MAC_ADDRESS_HERE";
-        int returned_value = mBluetoothService.connectBluetooth(uuid, macAddress);
+        if(mBluetoothService == null){
+            Toast.makeText(this, "null error", Toast.LENGTH_SHORT).show();
+
+        }
+        int returned_value = mBluetoothService.connectBluetooth(uuid, address);
         if(returned_value == 1){
             handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
             runOnUiThread((Runnable) () -> startButton.setEnabled(true));
         }
-        else if(returned_value == -1){
+        else{
             handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
-
         }
     }
 
@@ -223,11 +237,8 @@ public class MainActivity extends AppCompatActivity {
 
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 return;
-
             } else {
-
                 Toast.makeText(this, "Please allow the Permission", Toast.LENGTH_SHORT).show();
-
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
