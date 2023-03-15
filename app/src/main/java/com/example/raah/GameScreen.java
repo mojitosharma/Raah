@@ -52,6 +52,7 @@ public class GameScreen extends AppCompatActivity {
         deviceName=Variables.deviceName;
         buttonToggle.setEnabled(false);
         mmSocket = Variables.mmsocket;
+        Toast.makeText(mContext , "In here 1", Toast.LENGTH_SHORT).show();
         connectedThread = new ConnectedThread(mmSocket);
         connectedThread.run();
 
@@ -116,9 +117,11 @@ public class GameScreen extends AppCompatActivity {
         private final OutputStream mmOutStream;
 
         public ConnectedThread(BluetoothSocket socket) {
+            Toast.makeText(mContext , "In constructor 1", Toast.LENGTH_SHORT).show();
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
+            Toast.makeText(mContext , "In constructor 2", Toast.LENGTH_SHORT).show();
 
             // Get the input and output streams, using temp objects because
             // member streams are final
@@ -129,9 +132,11 @@ public class GameScreen extends AppCompatActivity {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+            Toast.makeText(mContext , "In constructor end", Toast.LENGTH_SHORT).show();
         }
 
         public void run() {
+            Toast.makeText(mContext , "In run 1", Toast.LENGTH_SHORT).show();
             byte[] buffer = new byte[1024];  // buffer store for the stream
             int bytes = 0; // bytes returned from read()
             // Keep listening to the InputStream until an exception occurs
@@ -141,7 +146,16 @@ public class GameScreen extends AppCompatActivity {
                     Read from the InputStream from Arduino until termination character is reached.
                     Then send the whole String message to GUI Handler.
                      */
-                    buffer[bytes] = (byte) mmInStream.read();
+                    if(mmInStream.available()  > 0){
+                        Log.i("mmInStream", "run: mmInStream 1");
+                        buffer[bytes] = (byte) mmInStream.read();
+                        Log.i("mmInStream", "run: mmInStream 2");
+                    }
+                    else{
+                        Log.i("mmInStream", "run: mmInStream");
+                        cancel();
+                    }
+
 //                    String readMessage;
                     if (buffer[bytes] == '\n'){
 //                        readMessage = new String(buffer,0,bytes);

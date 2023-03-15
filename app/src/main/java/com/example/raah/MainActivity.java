@@ -15,14 +15,17 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
@@ -56,6 +59,23 @@ public class MainActivity extends AppCompatActivity {
     private static Button startButton;
     boolean isAllPermissionsAvailable=false;
     String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN};
+
+    private BluetoothService mBluetoothService;
+    private boolean mBound = false;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder) iBinder;
+            mBluetoothService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mBound = false;
+        }
+    };
 
     @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
@@ -141,8 +161,20 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this,GameScreen.class);
             startActivity(intent);
         });
+    }
 
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(mConnection);
+        mBound = false;
+    }
 
+    private void connectBluetoothDevice() {
+        mBluetoothService.connectBluetooth();
+    }
+
+    private void disconnectBluetoothDevice() {
+        mBluetoothService.disconnectBluetooth();
     }
 
     public boolean checkPermission(String[] permissions){
