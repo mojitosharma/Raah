@@ -1,49 +1,31 @@
 package com.example.raah;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.Settings;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
-
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.UUID;
-
-import static android.content.ContentValues.TAG;
 
 @RequiresApi(api = Build.VERSION_CODES.S)
 public class MainActivity extends AppCompatActivity {
@@ -56,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     public static int returned_value = 0;
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
     private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
-    private static Button startButton, buttonConnect;
+    private Button startButton, buttonConnect;
     boolean isAllPermissionsAvailable=false;
     String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN};
 
@@ -149,8 +131,8 @@ public class MainActivity extends AppCompatActivity {
 
         if(returned_value == 1){
             handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
-            runOnUiThread((Runnable) () -> buttonConnect.setEnabled(true));
-            runOnUiThread((Runnable) () -> startButton.setEnabled(true));
+            runOnUiThread(() -> buttonConnect.setEnabled(true));
+            runOnUiThread(() -> startButton.setEnabled(true));
         }
         else if(returned_value == -1){
             handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
@@ -208,8 +190,8 @@ public class MainActivity extends AppCompatActivity {
             returned_value = mBluetoothService.connectBluetooth(uuid, address);
             if (returned_value == 1) {
                 handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
-                runOnUiThread((Runnable) () -> startButton.setEnabled(true));
-                runOnUiThread((Runnable) () -> buttonConnect.setEnabled(true));
+                runOnUiThread(() -> startButton.setEnabled(true));
+                runOnUiThread(() -> buttonConnect.setEnabled(true));
             } else {
                 handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
             }
