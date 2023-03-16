@@ -3,6 +3,7 @@ package com.example.raah;
 import static android.content.ContentValues.TAG;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -15,15 +16,18 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.UUID;
 public class BluetoothService extends Service {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mBluetoothDevice;
     private BluetoothSocket mBluetoothSocket;
     BluetoothSocket tmp = null;
+    private boolean mRunning;
     private InputStream mInputStream;
     private OutputStream mOutputStream;
     private final IBinder mBinder = new LocalBinder();
+
 
     public class LocalBinder extends Binder {
         BluetoothService getService() {
@@ -57,8 +61,8 @@ public class BluetoothService extends Service {
             mBluetoothAdapter.cancelDiscovery();
             mBluetoothSocket.connect();
             Log.e("Status", "Device connected");
-//            mInputStream = mBluetoothSocket.getInputStream();
-//            mOutputStream = mBluetoothSocket.getOutputStream();
+            mInputStream = mBluetoothSocket.getInputStream();
+            mOutputStream = mBluetoothSocket.getOutputStream();
             return 1;
         } catch (IOException connectException) {
             connectException.printStackTrace();
@@ -81,6 +85,54 @@ public class BluetoothService extends Service {
             e.printStackTrace();
         }
     }
+
+
+    public void sendData(final byte[] data) {
+        // Run the send operation on a separate thread
+        new Thread(() -> {
+            try {
+                Log.i("ServiceSending","aagya1: "+ Arrays.toString(data));
+                mBluetoothSocket.getOutputStream().write(data);
+                mBluetoothSocket.getOutputStream().flush();
+                Log.i("ServiceSending","aagya 2");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    Activity activity;
+    public void startReceive(Activity activity){
+        ReceiveThread run = new ReceiveThread();
+        this.activity = activity;
+        run.start();
+        Log.i("ReceiveThread","Started");
+    }
+
+
+    private class ReceiveThread extends Thread {
+        @Override
+        public void run() {
+            // Run the receive operation in a loop
+            mRunning = true;
+            while (mRunning) {
+                byte[] buffer = new byte[1024];
+                int numBytes;
+                try {
+                    numBytes = mInputStream.read(buffer);
+                    String data = new String(buffer, 0, numBytes);
+                    ((GameScreen)activity).send(data);
+                    // Process the received data
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
+
+
 
 //    public void sendCommand(String command) {
 //        try {

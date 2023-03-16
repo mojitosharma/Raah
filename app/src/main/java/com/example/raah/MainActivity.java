@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, deviceName, Toast.LENGTH_SHORT).show();
             // Get the device address to make BT Connection
             deviceAddress = getIntent().getStringExtra("deviceAddress");
-            // Show progree and connection status
+            // Show progress and connection status
             toolbar.setSubtitle("Connecting to " + deviceName + "...");
             buttonConnect.setEnabled(false);
 
