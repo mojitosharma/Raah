@@ -1,57 +1,34 @@
 package com.example.raah;
 
-import static android.content.ContentValues.TAG;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 public class GameScreen extends AppCompatActivity {
 //    public static ConnectedThread connectedThread;
-    public static Handler handler;
-    private static Context mContext;
-    public static BluetoothSocket mmSocket;
-    private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
-    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
-    private String deviceName = null;
-    private String deviceAddress;
-    private TextView textViewInfo;
-    private List<Float> mReceivedData = new ArrayList<>();
-
+//    public static Handler handler;
+//    private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
+//    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
+    private TextView currTextView, prevTextView,nextTextView;
     private BluetoothService mBluetoothService;
     private boolean mBound = false;
-
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private int curr,prev,next;
+    private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder) iBinder;
             mBluetoothService = binder.getService();
             mBluetoothService.startReceive(GameScreen.this);
+            mBluetoothService.sendData("1".getBytes());
             mBound = true;
         }
 
@@ -66,18 +43,45 @@ public class GameScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_screen);
-        mContext = getApplicationContext();
-        textViewInfo = findViewById(R.id.textViewInfo);
-        final Button buttonToggle = findViewById(R.id.buttonToggle);
-        deviceAddress=Variables.deviceAddress;
-        deviceName=Variables.deviceName;
-//        buttonToggle.setEnabled(false);
-        mmSocket = Variables.mmsocket;
-        Toast.makeText(mContext , "In here 1", Toast.LENGTH_SHORT).show();
-        // connecting to binded service
-        Intent serviceintent = new Intent(this, BluetoothService.class);
-//        startService(serviceintent);
-        bindService(serviceintent, mConnection, Context.BIND_AUTO_CREATE);
+        currTextView= findViewById(R.id.currTextView);
+        prevTextView =findViewById(R.id.prevTextView);
+        nextTextView=findViewById(R.id.nextTextView);
+        curr=0;
+        prev=-1;
+        next=2;
+        currTextView.setText(String.valueOf(curr));
+        prevTextView.setText(String.valueOf(prev));
+        nextTextView.setText(String.valueOf(next));
+        // connecting to bound service
+        Intent serviceIntent = new Intent(this, BluetoothService.class);
+//        startService(serviceIntent);
+        bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
+        
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mBluetoothService.sendData("0".getBytes());
+        if(mBound){
+            unbindService(mConnection);
+            mBound = false;
+        }
+    }
+
+    public void receivedData(String data){
+        Log.i("ArduinoReceived",data);
+        if(data.equals(String.valueOf(curr))){
+            prev=curr;
+            curr=next;
+            next++;
+            currTextView.setText(String.valueOf(curr));
+            prevTextView.setText(String.valueOf(prev));
+            nextTextView.setText(String.valueOf(next));
+        }
+    }
+
+}
+
 //        connectedThread = new ConnectedThread(mmSocket);
 //        connectedThread.run();
 
@@ -106,35 +110,34 @@ public class GameScreen extends AppCompatActivity {
 
 
 
-        // Button to ON/OFF LED on Arduino Board
-        buttonToggle.setOnClickListener(view -> {
-            String cmdText = null;
-            String btnState = buttonToggle.getText().toString().toLowerCase();
-            switch (btnState){
-                case "turn on":
-                    buttonToggle.setText(R.string.turn_off);
-                    // Command to turn on LED on Arduino. Must match with the command in Arduino code
-                    cmdText = "<turn on>";
-
-                    break;
-                case "turn off":
-                    buttonToggle.setText(R.string.turn_on);
-                    // Command to turn off LED on Arduino. Must match with the command in Arduino code
-                    cmdText = "<turn off>";
-                    break;
-            }
-            if(cmdText!=null){
-                cmdText = "2";
-                Log.i("SendFromGame",cmdText);
-                byte[] byteArray = cmdText.getBytes();
-                mBluetoothService.sendData(byteArray);
-            }else{
-                Toast.makeText(mContext, "Something went wrong. Please try again.", Toast.LENGTH_SHORT).show();
-            }
-            // Send command to Arduino board
-//            connectedThread.write(cmdText);
-        });
-    }
+// Button to ON/OFF LED on Arduino Board
+//        buttonToggle.setOnClickListener(view -> {
+//            String cmdText = null;
+//            String btnState = buttonToggle.getText().toString().toLowerCase();
+//            switch (btnState){
+//                case "turn on":
+//                    buttonToggle.setText(R.string.turn_off);
+//                    // Command to turn on LED on Arduino. Must match with the command in Arduino code
+//                    cmdText = "<turn on>";
+//
+//                    break;
+//                case "turn off":
+//                    buttonToggle.setText(R.string.turn_on);
+//                    // Command to turn off LED on Arduino. Must match with the command in Arduino code
+//                    cmdText = "<turn off>";
+//                    break;
+//            }
+//            if(cmdText!=null){
+//                cmdText = "2";
+//                Log.i("SendFromGame",cmdText);
+//                byte[] byteArray = cmdText.getBytes();
+//                mBluetoothService.sendData(byteArray);
+//            }else{
+//                Toast.makeText(mContext, "Something went wrong. Please try again.", Toast.LENGTH_SHORT).show();
+//            }
+//            // Send command to Arduino board
+////            connectedThread.write(cmdText);
+//        });
 //    private void onDataReceived(List<Float> data) {
 //        StringBuilder sb = new StringBuilder();
 //        for (float value : data) {
@@ -144,7 +147,7 @@ public class GameScreen extends AppCompatActivity {
 //        runOnUiThread(() -> textViewInfo.setText(receivedData));
 //    }
 
-    /* =============================== Thread for Data Transfer =========================================== */
+/* =============================== Thread for Data Transfer =========================================== */
 //    public static class ConnectedThread extends Thread {
 //        private final BluetoothSocket mmSocket;
 //        private final InputStream mmInStream;
@@ -228,18 +231,4 @@ public class GameScreen extends AppCompatActivity {
 //            }
 //        }
 //    }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if(mBound){
-            unbindService(mConnection);
-            mBound = false;
-        }
-    }
-
-    public void send(String data){
-        Log.i("ArduinoReceived",data);
-    }
-
-}
 

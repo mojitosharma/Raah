@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     public static BluetoothSocket mmSocket;
     public static int returned_value = 0;
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
-    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
+//    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
     private Button startButton, buttonConnect;
     boolean isAllPermissionsAvailable=false;
     String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN};
@@ -235,5 +235,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    };
+    }
 }

@@ -121,7 +121,7 @@ public class BluetoothService extends Service {
                 try {
                     numBytes = mInputStream.read(buffer);
                     String data = new String(buffer, 0, numBytes);
-                    ((GameScreen)activity).send(data);
+                    ((GameScreen)activity).receivedData(data);
                     // Process the received data
                 } catch (IOException e) {
                     e.printStackTrace();

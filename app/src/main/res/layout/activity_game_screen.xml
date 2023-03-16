@@ -5,33 +5,51 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".GameScreen">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:weightSum="1"
+        android:orientation="vertical"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.4"
+            android:background="@color/white">
+            <TextView
+                android:id="@+id/currTextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textColor="@color/black"
+                android:textSize="30sp"
+                android:gravity="center"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.6"
+            android:orientation="horizontal"
+            android:background="@color/black"
+            android:weightSum="1">
+            <TextView
+                android:id="@+id/prevTextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:textSize="30sp"
+                android:gravity="center"
+                android:layout_weight="0.5"
+                tools:ignore="NestedWeights" />
+            <TextView
+                android:id="@+id/nextTextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textColor="@color/white"
+                android:textSize="30sp"
+                android:gravity="center"
+                android:layout_weight="0.5"/>
 
-    <TextView
-        android:id="@+id/textViewInfo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="64dp"
-        android:layout_marginEnd="16dp"
-        android:textAlignment="center"
-        android:textStyle="italic"
-        android:textSize="40sp"
-        android:textColor="@color/black"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonToggle" />
-    <Button
-        android:id="@+id/buttonToggle"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="400dp"
-        android:text="@string/turn_on"
-        android:textSize="24sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        </LinearLayout>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
