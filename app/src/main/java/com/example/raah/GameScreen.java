@@ -47,8 +47,8 @@ public class GameScreen extends AppCompatActivity {
         prevTextView =findViewById(R.id.prevTextView);
         nextTextView=findViewById(R.id.nextTextView);
         curr=0;
-        prev=-1;
-        next=2;
+        prev=0;
+        next=1;
         currTextView.setText(String.valueOf(curr));
         prevTextView.setText(String.valueOf(prev));
         nextTextView.setText(String.valueOf(next));

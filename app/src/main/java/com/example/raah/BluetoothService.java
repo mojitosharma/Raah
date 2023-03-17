@@ -115,9 +115,9 @@ public class BluetoothService extends Service {
         public void run() {
             // Run the receive operation in a loop
             mRunning = true;
+            byte[] buffer = new byte[1024];
+            int numBytes;
             while (mRunning) {
-                byte[] buffer = new byte[1024];
-                int numBytes;
                 try {
                     numBytes = mInputStream.read(buffer);
                     String data = new String(buffer, 0, numBytes);
@@ -126,6 +126,13 @@ public class BluetoothService extends Service {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+//                if (buffer[numBytes] == '\n'){
+//                    Log.i("Buffer", Arrays.toString(buffer));
+//                    numBytes = 0;
+//                } else {
+//                    Log.i("Buffer","Error: "+Arrays.toString(buffer));
+//                    numBytes++;
+//                }
             }
         }
     }
