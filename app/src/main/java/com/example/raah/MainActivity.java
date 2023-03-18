@@ -11,9 +11,11 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -28,19 +30,19 @@ import android.widget.Toast;
 import java.util.UUID;
 
 @RequiresApi(api = Build.VERSION_CODES.S)
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     private String deviceName = null;
-    private String deviceAddress;
+    Toolbar toolbar;
     private static Context mContext;
     public static Handler handler;
-    public static BluetoothSocket mmSocket;
-    public static int returned_value = 0;
+    public static int returned_value;
+    public static boolean ifFromFailedConnection=false;
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
 //    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
     private Button startButton, buttonConnect;
-    boolean isAllPermissionsAvailable=false;
-    String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN};
+    IntentFilter intentFilter;
+    String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN,Manifest.permission.BLUETOOTH_ADMIN,Manifest.permission.BLUETOOTH};
 
     private static BluetoothService mBluetoothService;
     private boolean mBound = false;
@@ -65,36 +67,58 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED) || (intent.getAction().equals(BluetoothDevice.ACTION_ACL_DISCONNECTED) &&(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF) == BluetoothAdapter.STATE_OFF))) {
+                if(!Variables.isMainActivityRestarted){
+                    Toast.makeText(MainActivity.this, "Bluetooth disconnected.", Toast.LENGTH_SHORT).show();
+                    Intent i = new Intent(MainActivity.this, MainActivity.class);
+                    i.putExtra("failedConnection", true);
+                    finish();
+                    startActivity(i);
+                }
+            }
+        }
+    };
+
     @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
+        Variables.isMainActivityRestarted=true;
+        intentFilter= new IntentFilter();
+        intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
         // connecting to binded service
-        Intent serviceintent = new Intent(this, BluetoothService.class);
-        startService(serviceintent);
-        bindService(serviceintent, mConnection, Context.BIND_AUTO_CREATE);
+        Intent serviceIntent = new Intent(this, BluetoothService.class);
+        startService(serviceIntent);
+        bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
 
 
         startButton = findViewById(R.id.startButton);
         startButton.setEnabled(false);
         buttonConnect = findViewById(R.id.buttonConnect);
+        returned_value = 0;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
-            if (!checkPermission(permissions)) {
+            if (checkPermission(permissions)) {
                 ActivityCompat.requestPermissions(this, permissions, 1);
             }
         }
 
         // UI Initialization
-        final Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
 
         deviceName = getIntent().getStringExtra("deviceName");
-        if (deviceName != null){
+        ifFromFailedConnection=getIntent().getBooleanExtra("failedConnection",false);
+        System.out.println("Working: "+ifFromFailedConnection);
+        if (deviceName != null && !ifFromFailedConnection){
             Toast.makeText(this, deviceName, Toast.LENGTH_SHORT).show();
             // Get the device address to make BT Connection
-            deviceAddress = getIntent().getStringExtra("deviceAddress");
+            String deviceAddress = getIntent().getStringExtra("deviceAddress");
             // Show progress and connection status
             toolbar.setSubtitle("Connecting to " + deviceName + "...");
             buttonConnect.setEnabled(false);
@@ -108,6 +132,10 @@ public class MainActivity extends AppCompatActivity {
 //            createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
 //            createConnectThread.start();
             connectBluetoothDevice(bluetoothAdapter, deviceAddress);
+        }else{
+            buttonConnect.setEnabled(true);
+            startButton.setEnabled(false);
+            toolbar.setSubtitle("");
         }
 
 
@@ -118,7 +146,8 @@ public class MainActivity extends AppCompatActivity {
                     switch (msg.arg1) {
                         case 1:
                             toolbar.setSubtitle("Connected to " + deviceName);
-                            buttonConnect.setEnabled(true);
+                            Variables.isMainActivityRestarted=false;
+                            buttonConnect.setEnabled(false);
                             break;
                         case -1:
                             toolbar.setSubtitle("Device fails to connect");
@@ -131,11 +160,12 @@ public class MainActivity extends AppCompatActivity {
 
         if(returned_value == 1){
             handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
-            runOnUiThread(() -> buttonConnect.setEnabled(true));
+            runOnUiThread(() -> buttonConnect.setEnabled(false));
             runOnUiThread(() -> startButton.setEnabled(true));
         }
         else if(returned_value == -1){
             handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
+            runOnUiThread(() -> buttonConnect.setEnabled(true));
         }
 
 
@@ -151,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(mContext, "Bluetooth not enabled. Please enable bluetooth to proceed", Toast.LENGTH_SHORT).show();
             } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
-                    if (!checkPermission(permissions)) {
+                    if (checkPermission(permissions)) {
                         ActivityCompat.requestPermissions(this, permissions, 1);
                     }
                 }
@@ -161,12 +191,18 @@ public class MainActivity extends AppCompatActivity {
         });
 
         startButton.setOnClickListener(view -> {
-            Variables.deviceName=deviceName;
-            Variables.deviceAddress=deviceAddress;
-            Variables.mmsocket=mmSocket;
             Intent intent = new Intent(this,GameScreen.class);
             startActivity(intent);
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent serviceIntent = new Intent(this, BluetoothService.class);
+//        startService(serviceIntent);
+        bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
+        registerReceiver(mReceiver, intentFilter);
     }
 
     @Override
@@ -178,6 +214,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        unregisterReceiver(mReceiver);
+    }
 
     @SuppressLint("MissingPermission")
     private void connectBluetoothDevice(BluetoothAdapter bluetoothAdapter, String address) {
@@ -206,11 +248,11 @@ public class MainActivity extends AppCompatActivity {
         if (permissions != null) {
             for (String permission : permissions) {
                 if (ActivityCompat.checkSelfPermission(getBaseContext(), permission) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
+                    return true;
                 }
             }
         }
-        return true;
+        return false;
     }
 
     /* ============================ Terminate Connection at BackPress ====================== */
@@ -232,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             } else {
                 Toast.makeText(this, "Please allow the Permission", Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(this, permissions, 1);
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

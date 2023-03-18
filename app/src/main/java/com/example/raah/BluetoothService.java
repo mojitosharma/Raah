@@ -8,7 +8,10 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -19,13 +22,15 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.UUID;
 public class BluetoothService extends Service {
-    private BluetoothAdapter mBluetoothAdapter;
-    private BluetoothDevice mBluetoothDevice;
-    private BluetoothSocket mBluetoothSocket;
-    BluetoothSocket tmp = null;
+    private static BluetoothAdapter mBluetoothAdapter;
+    private static BluetoothDevice mBluetoothDevice;
+    private static BluetoothSocket mBluetoothSocket;
+    private static ReceiveThread run;
+    private static UUID uuid;
     private boolean mRunning;
-    private InputStream mInputStream;
-    private OutputStream mOutputStream;
+    private static InputStream mInputStream;
+    private static OutputStream mOutputStream;
+    private static int returnVar=0;
     private final IBinder mBinder = new LocalBinder();
 
 
@@ -40,46 +45,20 @@ public class BluetoothService extends Service {
         return mBinder;
     }
     @SuppressLint("MissingPermission")
-    public int connectBluetooth(UUID uuid, String macAddress) {
+    public int connectBluetooth(UUID uuid1, String macAddress) {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(macAddress);
-
-        try {
-                /*
-                Get a BluetoothSocket to connect with the given BluetoothDevice.
-                Due to Android device varieties,the method below may not work fo different devices.
-                You should try using other methods i.e. :
-                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-                 */
-            tmp = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(uuid);
-
-        } catch (IOException e) {
-            Log.e(TAG, "Socket's create() method failed", e);
+        uuid=uuid1;
+        CreateConnectThread createConnectThread= new CreateConnectThread();
+        createConnectThread.start();
+        while(createConnectThread.isAlive()){
         }
-        mBluetoothSocket = tmp;
-        try {
-            mBluetoothAdapter.cancelDiscovery();
-            mBluetoothSocket.connect();
-            Log.e("Status", "Device connected");
-            mInputStream = mBluetoothSocket.getInputStream();
-            mOutputStream = mBluetoothSocket.getOutputStream();
-            return 1;
-        } catch (IOException connectException) {
-            connectException.printStackTrace();
-            // Unable to connect; close the socket and return.
-            try {
-                mBluetoothSocket.close();
-                Log.e("Status", "Cannot connect to device");
-                return -1;
-            } catch (IOException closeException) {
-                Log.e(TAG, "Could not close the client socket", closeException);
-            }
-        }
-        return 0;
+        return returnVar;
     }
 
     public void disconnectBluetooth() {
         try {
+            mRunning=false;
             mBluetoothSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -92,8 +71,8 @@ public class BluetoothService extends Service {
         new Thread(() -> {
             try {
                 Log.i("ServiceSending","aagya1: "+ Arrays.toString(data));
-                mBluetoothSocket.getOutputStream().write(data);
-                mBluetoothSocket.getOutputStream().flush();
+                mOutputStream.write(data);
+                mOutputStream.flush();
                 Log.i("ServiceSending","aagya 2");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -103,10 +82,15 @@ public class BluetoothService extends Service {
 
     Activity activity;
     public void startReceive(Activity activity){
-        ReceiveThread run = new ReceiveThread();
+        run = new ReceiveThread();
         this.activity = activity;
         run.start();
         Log.i("ReceiveThread","Started");
+    }
+    public void stopReceive(){
+        if(mRunning){
+            mRunning=false;
+        }
     }
 
 
@@ -125,6 +109,7 @@ public class BluetoothService extends Service {
                     // Process the received data
                 } catch (IOException e) {
                     e.printStackTrace();
+                    return;
                 }
 //                if (buffer[numBytes] == '\n'){
 //                    Log.i("Buffer", Arrays.toString(buffer));
@@ -137,8 +122,78 @@ public class BluetoothService extends Service {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    public static class CreateConnectThread extends Thread {
 
+        public CreateConnectThread() {
+            /*
+            Use a temporary object that is later assigned to mmSocket
+            because mmSocket is final.
+             */
+//            mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(address);
+            BluetoothSocket tmp = null;
+//            UUID uuid = mBluetoothDevice.getUuids()[0].getUuid();
+            try {
+                /*
+                Get a BluetoothSocket to connect with the given BluetoothDevice.
+                Due to Android device varieties,the method below may not work fo different devices.
+                You should try using other methods i.e. :
+                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+                 */
+                tmp = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(uuid);
+            } catch (IOException e) {
+                Log.e(TAG, "Socket's create() method failed", e);
+            }
+            mBluetoothSocket = tmp;
+        }
+        public void run() {
+            // Cancel discovery because it otherwise slows down the connection.
+//            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            mBluetoothAdapter.cancelDiscovery();
+            try {
+                // Connect to the remote device through the socket. This call blocks
+                // until it succeeds or throws an exception.
+                mBluetoothSocket.connect();
+                Log.i("Status", "Device connected");
+            mInputStream = mBluetoothSocket.getInputStream();
+            mOutputStream = mBluetoothSocket.getOutputStream();
+                returnVar=1;
+            } catch (IOException connectException) {
+                // Unable to connect; close the socket and return.
+                try {
+                    mBluetoothSocket.close();
+                    Log.e("Status", "Cannot connect to device");
+                    returnVar=-1;
+                } catch (IOException closeException) {
+                    Log.e(TAG, "Could not close the client socket", closeException);
+                }
+            }
 
+            // The connection attempt succeeded. Perform work associated with
+            // the connection in a separate thread.
+            return;
+        }
+
+        // Closes the client socket and causes the thread to finish.
+        public void cancel() {
+            try {
+                mBluetoothSocket.close();
+            } catch (IOException e) {
+                Log.e(TAG, "Could not close the client socket", e);
+            }
+        }
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        try {
+            mBluetoothSocket.close();
+            mRunning=false;
+//            unregisterReceiver(mBluetoothDisconnectReceiver);
+        } catch (IOException e) {
+            Log.e(TAG, "Could not close the client socket", e);
+        }
+    }
 
 
 //    public void sendCommand(String command) {
@@ -161,14 +216,35 @@ public class BluetoothService extends Service {
 //        }
 //        return null;
 //    }
-
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//        try {
-//            mBluetoothSocket.close();
+    //        try {
+//                /*
+//                Get a BluetoothSocket to connect with the given BluetoothDevice.
+//                Due to Android device varieties,the method below may not work fo different devices.
+//                You should try using other methods i.e. :
+//                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+//                 */
+//            tmp = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(uuid);
+//
 //        } catch (IOException e) {
-//            Log.e(TAG, "Could not close the client socket", e);
+//            Log.e(TAG, "Socket's create() method failed", e);
 //        }
-//    }
+//        mBluetoothSocket = tmp;
+//        try {
+//            mBluetoothAdapter.cancelDiscovery();
+//            mBluetoothSocket.connect();
+//            Log.e("Status", "Device connected");
+//            mInputStream = mBluetoothSocket.getInputStream();
+//            mOutputStream = mBluetoothSocket.getOutputStream();
+//            returnVar =1;
+//        } catch (IOException connectException) {
+//            connectException.printStackTrace();
+//            // Unable to connect; close the socket and return.
+//            try {
+//                mBluetoothSocket.close();
+//                Log.e("Status", "Cannot connect to device");
+//                returnVar = 1;
+//            } catch (IOException closeException) {
+//                Log.e(TAG, "Could not close the client socket", closeException);
+//            }
+//        }
 }

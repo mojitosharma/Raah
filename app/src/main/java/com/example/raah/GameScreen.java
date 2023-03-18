@@ -3,25 +3,45 @@ package com.example.raah;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class GameScreen extends AppCompatActivity {
+public class GameScreen extends AppCompatActivity{
 //    public static ConnectedThread connectedThread;
 //    public static Handler handler;
 //    private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
 //    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
     private TextView currTextView, prevTextView,nextTextView;
+    private LinearLayout aboveLinearLayout, belowLinearLayout;
     private BluetoothService mBluetoothService;
     private boolean mBound = false;
     private int curr,prev,next;
+    private int totalAttempts;
+    final int startColor = Color.WHITE;
+    final int endColor1 = Color.RED;
+    final int endColor2 = Color.GREEN;
+    private  ValueAnimator valueAnimator1,valueAnimator2;
+    private int wrongAttempts;
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -37,21 +57,74 @@ public class GameScreen extends AppCompatActivity {
             mBound = false;
         }
     };
+    IntentFilter intentFilter;
+    BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED) || (intent.getAction().equals(BluetoothDevice.ACTION_ACL_DISCONNECTED) &&(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF) == BluetoothAdapter.STATE_OFF))) {
+                if(!Variables.isMainActivityRestarted){
+                    Toast.makeText(GameScreen.this, "Bluetooth disconnected. Please try again.", Toast.LENGTH_SHORT).show();
+                    Intent i = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                        i = new Intent(GameScreen.this, MainActivity.class);
+                        finish();
+                        i.putExtra("failedConnection", true);
+                    }
+                    startActivity(i);
+                }
+            }
+        }
+    };
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint({"MissingPermission", "SetTextI18n"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_screen);
+        intentFilter= new IntentFilter();
+        intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         currTextView= findViewById(R.id.currTextView);
         prevTextView =findViewById(R.id.prevTextView);
         nextTextView=findViewById(R.id.nextTextView);
+        aboveLinearLayout=findViewById(R.id.aboveLinearLayout);
+        belowLinearLayout=findViewById(R.id.belowLinearLayout);
         curr=0;
-        prev=0;
+        prev=-1;
         next=1;
+        totalAttempts=0;
+        wrongAttempts=0;
         currTextView.setText(String.valueOf(curr));
-        prevTextView.setText(String.valueOf(prev));
+        prevTextView.setText("NA");
         nextTextView.setText(String.valueOf(next));
+        valueAnimator1 = ValueAnimator.ofObject(new ArgbEvaluator(), startColor, endColor1);
+        valueAnimator1.setDuration(100);
+        valueAnimator1.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+
+        valueAnimator1.addListener(new AnimatorListenerAdapter() {
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                final ValueAnimator reverseColorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), endColor1, startColor);
+                reverseColorAnimation.setDuration(400);
+                reverseColorAnimation.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+                reverseColorAnimation.start();
+            }
+        });
+        valueAnimator2 = ValueAnimator.ofObject(new ArgbEvaluator(), startColor, endColor2);
+        valueAnimator2.setDuration(100);
+        valueAnimator2.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+        valueAnimator2.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                final ValueAnimator reverseColorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), endColor2, startColor);
+                reverseColorAnimation.setDuration(400);
+                reverseColorAnimation.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+                reverseColorAnimation.start();
+            }
+        });
         // connecting to bound service
         Intent serviceIntent = new Intent(this, BluetoothService.class);
 //        startService(serviceIntent);
@@ -68,16 +141,59 @@ public class GameScreen extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     public void receivedData(String data){
         Log.i("ArduinoReceived",data);
         if(data.equals(String.valueOf(curr))){
+            totalAttempts++;
             prev=curr;
             curr=next;
-            next++;
+            runOnUiThread(() -> valueAnimator2.start());
+
+            if(curr<9){
+                next++;
+                nextTextView.setText(String.valueOf(next));
+            }else if(curr==9){
+                next=Integer.MAX_VALUE;
+                nextTextView.setText("Over");
+            }else{
+                mBluetoothService.sendData("0".getBytes());
+                mBluetoothService.stopReceive();
+                belowLinearLayout.setBackgroundColor(getResources().getColor(R.color.white));
+                currTextView.setText("You have done it!!");
+                prevTextView.setText("Wrong: "+ wrongAttempts+" of "+totalAttempts);
+                nextTextView.setText("Correct: 10 of "+totalAttempts);
+                return;
+            }
             currTextView.setText(String.valueOf(curr));
             prevTextView.setText(String.valueOf(prev));
-            nextTextView.setText(String.valueOf(next));
+        }else if(isNumeric(data)){
+            totalAttempts++;
+            wrongAttempts++;
+            runOnUiThread(() -> valueAnimator1.start());
         }
+    }
+    public static boolean isNumeric(String strNum) {
+        if (strNum == null) {
+            return false;
+        }
+        try {
+            double d = Integer.parseInt(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mReceiver);
     }
 
 }

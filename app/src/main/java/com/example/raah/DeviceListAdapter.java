@@ -49,7 +49,10 @@ public class DeviceListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         // When a device is selected
         itemHolder.linearLayout.setOnClickListener(view -> {
-            Intent intent = new Intent(context,MainActivity.class);
+            Intent intent = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                intent = new Intent(context, MainActivity.class);
+            }
             // Send device details to the MainActivity
             intent.putExtra("deviceName", deviceInfoModel.getDeviceName());
             intent.putExtra("deviceAddress",deviceInfoModel.getDeviceHardwareAddress());

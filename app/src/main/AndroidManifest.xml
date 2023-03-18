@@ -29,7 +29,7 @@
         <service
             android:name=".BluetoothService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
 
         <activity
             android:name=".GameScreen"
