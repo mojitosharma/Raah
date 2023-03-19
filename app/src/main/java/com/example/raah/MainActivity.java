@@ -10,7 +10,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -32,7 +31,6 @@ import java.util.UUID;
 @RequiresApi(api = Build.VERSION_CODES.S)
 public class MainActivity extends AppCompatActivity{
 
-    private String deviceName = null;
     Toolbar toolbar;
     private static Context mContext;
     public static Handler handler;
@@ -44,10 +42,10 @@ public class MainActivity extends AppCompatActivity{
     IntentFilter intentFilter;
     String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN,Manifest.permission.BLUETOOTH_ADMIN,Manifest.permission.BLUETOOTH};
 
-    private static BluetoothService mBluetoothService;
+    private BluetoothService mBluetoothService;
     private boolean mBound = false;
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder) iBinder;
@@ -75,6 +73,9 @@ public class MainActivity extends AppCompatActivity{
                     Toast.makeText(MainActivity.this, "Bluetooth disconnected.", Toast.LENGTH_SHORT).show();
                     Intent i = new Intent(MainActivity.this, MainActivity.class);
                     i.putExtra("failedConnection", true);
+                    i.putExtra("ConnectionStatus",0);
+                    Variables.deviceAddress=null;
+                    Variables.deviceName=null;
                     finish();
                     startActivity(i);
                 }
@@ -93,7 +94,7 @@ public class MainActivity extends AppCompatActivity{
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
-        // connecting to binded service
+        // connecting to bound service
         Intent serviceIntent = new Intent(this, BluetoothService.class);
         startService(serviceIntent);
         bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
@@ -102,7 +103,7 @@ public class MainActivity extends AppCompatActivity{
         startButton = findViewById(R.id.startButton);
         startButton.setEnabled(false);
         buttonConnect = findViewById(R.id.buttonConnect);
-        returned_value = 0;
+        returned_value = getIntent().getIntExtra("ConnectionStatus",0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
             if (checkPermission(permissions)) {
                 ActivityCompat.requestPermissions(this, permissions, 1);
@@ -112,13 +113,11 @@ public class MainActivity extends AppCompatActivity{
         // UI Initialization
         toolbar = findViewById(R.id.toolbar);
 
-        deviceName = getIntent().getStringExtra("deviceName");
+        String deviceName = Variables.deviceName;
         ifFromFailedConnection=getIntent().getBooleanExtra("failedConnection",false);
         System.out.println("Working: "+ifFromFailedConnection);
         if (deviceName != null && !ifFromFailedConnection){
             Toast.makeText(this, deviceName, Toast.LENGTH_SHORT).show();
-            // Get the device address to make BT Connection
-            String deviceAddress = getIntent().getStringExtra("deviceAddress");
             // Show progress and connection status
             toolbar.setSubtitle("Connecting to " + deviceName + "...");
             buttonConnect.setEnabled(false);
@@ -131,7 +130,7 @@ public class MainActivity extends AppCompatActivity{
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 //            createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
 //            createConnectThread.start();
-            connectBluetoothDevice(bluetoothAdapter, deviceAddress);
+            connectBluetoothDevice(bluetoothAdapter, Variables.deviceAddress);
         }else{
             buttonConnect.setEnabled(true);
             startButton.setEnabled(false);
@@ -145,7 +144,7 @@ public class MainActivity extends AppCompatActivity{
                 if (msg.what == CONNECTING_STATUS) {
                     switch (msg.arg1) {
                         case 1:
-                            toolbar.setSubtitle("Connected to " + deviceName);
+                            toolbar.setSubtitle("Connected to " + Variables.deviceName);
                             Variables.isMainActivityRestarted=false;
                             buttonConnect.setEnabled(false);
                             break;

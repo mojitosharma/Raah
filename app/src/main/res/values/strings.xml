@@ -12,4 +12,7 @@
     <string name="title_activity_main2">MainActivity2</string>
     <string name="turn_on">Turn On</string>
     <string name="turn_off">Turn Off</string>
+    <string name="go_to_home">Go To Home</string>
+    <string name="your_score">Your score</string>
+    <string name="congratulations">Congratulations</string>
 </resources>

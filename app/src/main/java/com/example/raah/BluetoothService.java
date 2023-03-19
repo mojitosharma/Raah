@@ -8,10 +8,7 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -51,14 +48,15 @@ public class BluetoothService extends Service {
         uuid=uuid1;
         CreateConnectThread createConnectThread= new CreateConnectThread();
         createConnectThread.start();
-        while(createConnectThread.isAlive()){
-        }
+        while(createConnectThread.isAlive()){}
         return returnVar;
     }
 
     public void disconnectBluetooth() {
         try {
-            mRunning=false;
+            stopReceive();
+            Variables.deviceAddress=null;
+            Variables.deviceName=null;
             mBluetoothSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -80,7 +78,7 @@ public class BluetoothService extends Service {
         }).start();
     }
 
-    Activity activity;
+    public Activity activity;
     public void startReceive(Activity activity){
         run = new ReceiveThread();
         this.activity = activity;
@@ -89,6 +87,8 @@ public class BluetoothService extends Service {
     }
     public void stopReceive(){
         if(mRunning){
+            run.interrupt();
+            run=null;
             mRunning=false;
         }
     }
@@ -105,7 +105,7 @@ public class BluetoothService extends Service {
                 try {
                     numBytes = mInputStream.read(buffer);
                     String data = new String(buffer, 0, numBytes);
-                    ((GameScreen)activity).receivedData(data);
+                    activity.runOnUiThread(() -> ((GameScreen)activity).receivedData(data));
                     // Process the received data
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -120,6 +120,7 @@ public class BluetoothService extends Service {
 //                }
             }
         }
+
     }
 
     @SuppressLint("MissingPermission")
@@ -161,6 +162,8 @@ public class BluetoothService extends Service {
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and return.
                 try {
+                    Variables.deviceAddress=null;
+                    Variables.deviceName=null;
                     mBluetoothSocket.close();
                     Log.e("Status", "Cannot connect to device");
                     returnVar=-1;
@@ -171,7 +174,6 @@ public class BluetoothService extends Service {
 
             // The connection attempt succeeded. Perform work associated with
             // the connection in a separate thread.
-            return;
         }
 
         // Closes the client socket and causes the thread to finish.
@@ -187,8 +189,10 @@ public class BluetoothService extends Service {
     public void onDestroy() {
         super.onDestroy();
         try {
+            stopReceive();
+            Variables.deviceAddress=null;
+            Variables.deviceName=null;
             mBluetoothSocket.close();
-            mRunning=false;
 //            unregisterReceiver(mBluetoothDisconnectReceiver);
         } catch (IOException e) {
             Log.e(TAG, "Could not close the client socket", e);

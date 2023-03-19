@@ -7,14 +7,15 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
 public class DeviceListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private Context context;
-    private List<Object> deviceList;
+    private final Context context;
+    private final List<Object> deviceList;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textName, textAddress;
@@ -34,14 +35,14 @@ public class DeviceListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     }
 
+    @NonNull
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.device_info_layout, parent, false);
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
+        return new ViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final RecyclerView.ViewHolder holder, final int position) {
         ViewHolder itemHolder = (ViewHolder) holder;
         final DeviceInfoModel deviceInfoModel = (DeviceInfoModel) deviceList.get(position);
         itemHolder.textName.setText(deviceInfoModel.getDeviceName());
@@ -54,8 +55,8 @@ public class DeviceListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 intent = new Intent(context, MainActivity.class);
             }
             // Send device details to the MainActivity
-            intent.putExtra("deviceName", deviceInfoModel.getDeviceName());
-            intent.putExtra("deviceAddress",deviceInfoModel.getDeviceHardwareAddress());
+            Variables.deviceName=deviceInfoModel.getDeviceName();
+            Variables.deviceAddress=deviceInfoModel.getDeviceHardwareAddress();
             // Call MainActivity
             context.startActivity(intent);
 
@@ -64,7 +65,6 @@ public class DeviceListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public int getItemCount() {
-        int dataCount = deviceList.size();
-        return dataCount;
+        return deviceList.size();
     }
 }

@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -18,30 +17,25 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class GameScreen extends AppCompatActivity{
-//    public static ConnectedThread connectedThread;
-//    public static Handler handler;
-//    private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
-//    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
     private TextView currTextView, prevTextView,nextTextView;
-    private LinearLayout aboveLinearLayout, belowLinearLayout;
+    private LinearLayout aboveLinearLayout;
     private BluetoothService mBluetoothService;
     private boolean mBound = false;
-    private int curr,prev,next;
-    private int totalAttempts;
+    private MediaPlayer mediaPlayerCorrect,mediaPlayerWrong;
+    private int curr,prev,next,totalAttempts,wrongAttempts;
     final int startColor = Color.WHITE;
     final int endColor1 = Color.RED;
     final int endColor2 = Color.GREEN;
-    private  ValueAnimator valueAnimator1,valueAnimator2;
-    private int wrongAttempts;
+    private ValueAnimator valueAnimator1,valueAnimator2;
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -69,6 +63,9 @@ public class GameScreen extends AppCompatActivity{
                         i = new Intent(GameScreen.this, MainActivity.class);
                         finish();
                         i.putExtra("failedConnection", true);
+                        i.putExtra("ConnectionStatus",0);
+                        Variables.deviceAddress=null;
+                        Variables.deviceName=null;
                     }
                     startActivity(i);
                 }
@@ -81,6 +78,8 @@ public class GameScreen extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_screen);
+        mediaPlayerWrong = MediaPlayer.create(this, R.raw.wrong);
+        mediaPlayerCorrect = MediaPlayer.create(this, R.raw.correct);
         intentFilter= new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
@@ -88,7 +87,6 @@ public class GameScreen extends AppCompatActivity{
         prevTextView =findViewById(R.id.prevTextView);
         nextTextView=findViewById(R.id.nextTextView);
         aboveLinearLayout=findViewById(R.id.aboveLinearLayout);
-        belowLinearLayout=findViewById(R.id.belowLinearLayout);
         curr=0;
         prev=-1;
         next=1;
@@ -134,6 +132,8 @@ public class GameScreen extends AppCompatActivity{
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mediaPlayerCorrect.release();
+        mediaPlayerWrong.release();
         mBluetoothService.sendData("0".getBytes());
         if(mBound){
             unbindService(mConnection);
@@ -148,29 +148,36 @@ public class GameScreen extends AppCompatActivity{
             totalAttempts++;
             prev=curr;
             curr=next;
-            runOnUiThread(() -> valueAnimator2.start());
+            valueAnimator2.start();
 
             if(curr<9){
                 next++;
                 nextTextView.setText(String.valueOf(next));
+                currTextView.setText(String.valueOf(curr));
+                prevTextView.setText(String.valueOf(prev));
+                mediaPlayerCorrect.start();
             }else if(curr==9){
                 next=Integer.MAX_VALUE;
                 nextTextView.setText("Over");
+                currTextView.setText(String.valueOf(curr));
+                prevTextView.setText(String.valueOf(prev));
+                mediaPlayerCorrect.start();
             }else{
                 mBluetoothService.sendData("0".getBytes());
+                mediaPlayerCorrect.release();
+                mediaPlayerWrong.release();
+                Intent i = new Intent(GameScreen.this,ShowScoreActivity.class);
+                i.putExtra("TotalAttempts",totalAttempts);
+                i.putExtra("WrongAttempts",wrongAttempts);
                 mBluetoothService.stopReceive();
-                belowLinearLayout.setBackgroundColor(getResources().getColor(R.color.white));
-                currTextView.setText("You have done it!!");
-                prevTextView.setText("Wrong: "+ wrongAttempts+" of "+totalAttempts);
-                nextTextView.setText("Correct: 10 of "+totalAttempts);
-                return;
+                finish();
+                startActivity(i);
             }
-            currTextView.setText(String.valueOf(curr));
-            prevTextView.setText(String.valueOf(prev));
         }else if(isNumeric(data)){
             totalAttempts++;
             wrongAttempts++;
-            runOnUiThread(() -> valueAnimator1.start());
+            mediaPlayerWrong.start();
+            valueAnimator1.start();
         }
     }
     public static boolean isNumeric(String strNum) {
@@ -178,7 +185,7 @@ public class GameScreen extends AppCompatActivity{
             return false;
         }
         try {
-            double d = Integer.parseInt(strNum);
+            Integer.parseInt(strNum);
         } catch (NumberFormatException nfe) {
             return false;
         }
@@ -193,6 +200,8 @@ public class GameScreen extends AppCompatActivity{
     @Override
     protected void onPause() {
         super.onPause();
+        mediaPlayerCorrect.release();
+        mediaPlayerWrong.release();
         unregisterReceiver(mReceiver);
     }
 

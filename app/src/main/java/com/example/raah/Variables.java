@@ -1,7 +1,8 @@
 package com.example.raah;
 
-import android.bluetooth.BluetoothSocket;
 
 public class Variables {
     public static boolean isMainActivityRestarted=true;
+    public static String deviceName;
+    public static String deviceAddress;
 }
