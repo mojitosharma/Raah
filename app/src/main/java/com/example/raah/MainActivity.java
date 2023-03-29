@@ -8,6 +8,7 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -24,6 +25,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import java.util.UUID;
@@ -38,11 +40,11 @@ public class MainActivity extends AppCompatActivity{
     public static boolean ifFromFailedConnection=false;
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
 //    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
-    private Button startButton, buttonConnect;
+    private Button startButton, buttonConnect,addNewPlayerButton;
     IntentFilter intentFilter;
     String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN,Manifest.permission.BLUETOOTH_ADMIN,Manifest.permission.BLUETOOTH};
 
-    private BluetoothService mBluetoothService;
+    private static BluetoothService mBluetoothService;
     private boolean mBound = false;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
@@ -82,36 +84,34 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     };
-
+    public void initialize(){
+        buttonConnect = findViewById(R.id.buttonConnect);
+        addNewPlayerButton = findViewById(R.id.addNewPlayerButton);
+        startButton = findViewById(R.id.startButton);
+        toolbar = findViewById(R.id.toolbar);
+    }
     @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
+        // connecting to bound service
+        initialize();
+        Intent serviceIntent = new Intent(this, BluetoothService.class);
+        startService(serviceIntent);
+        bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
         Variables.isMainActivityRestarted=true;
         intentFilter= new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-
-        // connecting to bound service
-        Intent serviceIntent = new Intent(this, BluetoothService.class);
-        startService(serviceIntent);
-        bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
-
-
-        startButton = findViewById(R.id.startButton);
         startButton.setEnabled(false);
-        buttonConnect = findViewById(R.id.buttonConnect);
         returned_value = getIntent().getIntExtra("ConnectionStatus",0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
             if (checkPermission(permissions)) {
                 ActivityCompat.requestPermissions(this, permissions, 1);
             }
         }
-
-        // UI Initialization
-        toolbar = findViewById(R.id.toolbar);
 
         String deviceName = Variables.deviceName;
         ifFromFailedConnection=getIntent().getBooleanExtra("failedConnection",false);
@@ -128,6 +128,7 @@ public class MainActivity extends AppCompatActivity{
             selected device (see the thread code below)
              */
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            Log.i("testing123", String.valueOf(bluetoothAdapter==null));
 //            createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
 //            createConnectThread.start();
             connectBluetoothDevice(bluetoothAdapter, Variables.deviceAddress);
@@ -193,6 +194,10 @@ public class MainActivity extends AppCompatActivity{
             Intent intent = new Intent(this,GameScreen.class);
             startActivity(intent);
         });
+        addNewPlayerButton.setOnClickListener(view -> {
+            Intent addPlayerIntent = new Intent(MainActivity.this,AddPlayerActivity.class);
+            startActivity(addPlayerIntent);
+        });
     }
 
     @Override
@@ -225,6 +230,7 @@ public class MainActivity extends AppCompatActivity{
         BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
         UUID uuid = bluetoothDevice.getUuids()[0].getUuid();
         if(mBluetoothService == null){
+            Log.i("connectedBluetooth","null here");
             Toast.makeText(this, "null error", Toast.LENGTH_SHORT).show();
         }
         else {
@@ -253,16 +259,28 @@ public class MainActivity extends AppCompatActivity{
         }
         return false;
     }
-
+    private boolean isMyBackgroundServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (BluetoothService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
     /* ============================ Terminate Connection at BackPress ====================== */
     @Override
     public void onBackPressed() {
         // Terminate Bluetooth Connection and close app
-        disconnectBluetoothDevice();
-        Intent a = new Intent(Intent.ACTION_MAIN);
-        a.addCategory(Intent.CATEGORY_HOME);
-        a.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(a);
+        if(isMyBackgroundServiceRunning()){
+            disconnectBluetoothDevice();
+        }
+//        Intent a = new Intent(Intent.ACTION_MAIN);
+//        a.addCategory(Intent.CATEGORY_HOME);
+//        a.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        startActivity(a);
+        this.finishAffinity();
+        finish();
     }
 
     @Override

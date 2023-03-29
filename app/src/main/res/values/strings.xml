@@ -15,4 +15,20 @@
     <string name="go_to_home">Go To Home</string>
     <string name="your_score">Your score</string>
     <string name="congratulations">Congratulations</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="or">Or</string>
+    <string name="sign_in">Sign In</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="username">Username</string>
+    <string name="name">Name</string>
+    <string name="add_new_player">Add New Player</string>
+    <string name="submit">Submit</string>
+    <string name="logo">Logo</string>
 </resources>

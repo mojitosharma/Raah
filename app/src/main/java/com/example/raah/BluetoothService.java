@@ -57,7 +57,9 @@ public class BluetoothService extends Service {
             stopReceive();
             Variables.deviceAddress=null;
             Variables.deviceName=null;
-            mBluetoothSocket.close();
+            if(mBluetoothSocket!=null){
+                mBluetoothSocket.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
