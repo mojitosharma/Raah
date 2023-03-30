@@ -22,4 +22,15 @@
     <style name="Theme.Raah.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.Raah.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="customExtendedFAB">
+
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSizeTopRight">14dp</item>
+        <item name="cornerSizeTopLeft">14dp</item>
+        <item name="cornerSizeBottomRight">14dp</item>
+        <item name="cornerSizeBottomLeft">14dp</item>
+        <item name="colorSecondary">@color/purple_500</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+    </style>
 </resources>

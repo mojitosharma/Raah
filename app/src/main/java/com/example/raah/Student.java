@@ -6,6 +6,7 @@ public class Student {
     private String name;
     private String username;
     HashMap<String,HashMap<String,Integer>> scoreList;
+    public Student(){}
     public Student(String name, String username){
         this.name=name;
         this.username = username;

@@ -10,7 +10,7 @@ import android.widget.ImageView;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginOrSignUpActivity extends AppCompatActivity {
-    FirebaseAuth mAuth;
+    private  FirebaseAuth mAuth;
     Button signUpButtonIntro,logInButtonIntro;
     ImageView logoImageViewIntro;
     @Override
@@ -21,19 +21,19 @@ public class LoginOrSignUpActivity extends AppCompatActivity {
         Intent intent = new Intent(LoginOrSignUpActivity.this,LoginActivity.class);
         if(mAuth.getCurrentUser()!=null){
             intent.putExtra("loginOrSignUp","loggedIn");
+            finish();
             startActivity(intent);
         }
         logoImageViewIntro = findViewById(R.id.logoImageViewIntro);
         logInButtonIntro = findViewById(R.id.logInButtonIntro);
         signUpButtonIntro = findViewById(R.id.signUpButtonIntro);
+        logoImageViewIntro.setImageResource(R.drawable.raah);
         logInButtonIntro.setOnClickListener(view -> {
             intent.putExtra("loginOrSignUp","login");
-            finish();
             startActivity(intent);
         });
         signUpButtonIntro.setOnClickListener(view -> {
             intent.putExtra("loginOrSignUp","signup");
-            finish();
             startActivity(intent);
         });
     }

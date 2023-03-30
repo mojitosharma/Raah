@@ -25,22 +25,31 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.UUID;
 
 @RequiresApi(api = Build.VERSION_CODES.S)
 public class MainActivity extends AppCompatActivity{
 
     Toolbar toolbar;
+    private FirebaseAuth mAuth;
     private static Context mContext;
     public static Handler handler;
     public static int returned_value;
     public static boolean ifFromFailedConnection=false;
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
 //    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
-    private Button startButton, buttonConnect,addNewPlayerButton;
+    private Button startButton, buttonConnect,playerListButton;
+    FloatingActionButton addNewPlayerButton;
     IntentFilter intentFilter;
     String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN,Manifest.permission.BLUETOOTH_ADMIN,Manifest.permission.BLUETOOTH};
 
@@ -89,6 +98,7 @@ public class MainActivity extends AppCompatActivity{
         addNewPlayerButton = findViewById(R.id.addNewPlayerButton);
         startButton = findViewById(R.id.startButton);
         toolbar = findViewById(R.id.toolbar);
+        playerListButton = findViewById(R.id.playerListButton);
     }
     @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
@@ -96,8 +106,15 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
+        if(user==null){
+            Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
+            return;
+        }
         // connecting to bound service
         initialize();
+        setSupportActionBar(toolbar);
         Intent serviceIntent = new Intent(this, BluetoothService.class);
         startService(serviceIntent);
         bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE);
@@ -192,6 +209,10 @@ public class MainActivity extends AppCompatActivity{
 
         startButton.setOnClickListener(view -> {
             Intent intent = new Intent(this,GameScreen.class);
+            startActivity(intent);
+        });
+        playerListButton.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this,PlayerListActivity.class);
             startActivity(intent);
         });
         addNewPlayerButton.setOnClickListener(view -> {
@@ -295,5 +316,27 @@ public class MainActivity extends AppCompatActivity{
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.menu_logout && mAuth.getCurrentUser()!=null) {
+            mAuth.signOut();
+            if(mAuth.getCurrentUser()==null){
+                Toast.makeText(mContext, "Logged out successfully", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, LoginOrSignUpActivity.class));
+                finishAffinity();
+                finish();
+            }else{
+                Toast.makeText(mContext, "Failed to log out", Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

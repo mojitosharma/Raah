@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -21,11 +23,14 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 public class AddPlayerActivity extends AppCompatActivity {
-    FirebaseAuth mAuth;
+    private FirebaseAuth mAuth;
     EditText usernameEditText,nameEditText;
     Button submitButtonAddPlayer;
     String name="";
     String  username="";
+    View progressOverlay;
+    AlphaAnimation inAnimation;
+    AlphaAnimation outAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,12 +42,19 @@ public class AddPlayerActivity extends AppCompatActivity {
             Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
             return;
         }
+        progressOverlay =findViewById(R.id.progress_overlay);
+        outAnimation = new AlphaAnimation(1f, 0f);
+        outAnimation.setDuration(200);
+        inAnimation = new AlphaAnimation(0f, 1f);
+        inAnimation.setDuration(200);
         nameEditText = findViewById(R.id.nameEditText);
         usernameEditText=findViewById(R.id.usernameEditText);
         submitButtonAddPlayer =findViewById(R.id.submitButtonAddPlayer);
         String userId = user.getUid();
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("users").child(userId);
         submitButtonAddPlayer.setOnClickListener(view -> {
+            progressOverlay.setAnimation(inAnimation);
+            progressOverlay.setVisibility(View.VISIBLE);
             name=nameEditText.getText().toString().trim();
             username=usernameEditText.getText().toString().trim();
             Student student= new Student(name, username);
@@ -71,11 +83,15 @@ public class AddPlayerActivity extends AppCompatActivity {
                             Log.i("ObjectId","Null");
                         }
                     }
+                    progressOverlay.setAnimation(outAnimation);
+                    progressOverlay.setVisibility(View.GONE);
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
                     Toast.makeText(AddPlayerActivity.this, "Some error occurred", Toast.LENGTH_SHORT).show();
+                    progressOverlay.setAnimation(outAnimation);
+                    progressOverlay.setVisibility(View.GONE);
                 }
             });
         });
