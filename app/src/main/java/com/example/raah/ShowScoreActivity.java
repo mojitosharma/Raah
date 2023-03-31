@@ -1,7 +1,9 @@
 package com.example.raah;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -10,13 +12,39 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 public class ShowScoreActivity extends AppCompatActivity {
     private IntentFilter intentFilter;
+    View progressOverlay;
+    AlphaAnimation inAnimation;
+    AlphaAnimation outAnimation;
+    private FirebaseAuth mAuth;
+    private FirebaseUser user;
+    private String username="";
+    private int totalAttempts=0;
+    private int correctAttempts=0;
+    private String gameName="";
+    private String dateAndTime="";
     private MediaPlayer mediaPlayer;
 
     BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -39,19 +67,38 @@ public class ShowScoreActivity extends AppCompatActivity {
             }
         }
     };
+    @SuppressLint("SimpleDateFormat")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_score);
+        mAuth = FirebaseAuth.getInstance();
+        user = mAuth.getCurrentUser();
+        if(user==null){
+            Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
+            Intent gotToLoginPage = new Intent(ShowScoreActivity.this, LoginOrSignUpActivity.class);
+            startActivity(gotToLoginPage);
+            finishAffinity();
+            finish();
+            return;
+        }
         intentFilter= new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(mReceiver, intentFilter);
-        int totalAttempts = getIntent().getIntExtra("TotalAttempts", 0);
-        int wrongAttempts = getIntent().getIntExtra("WrongAttempts", 0);
+        totalAttempts = getIntent().getIntExtra("TotalAttempts", 0);
+        correctAttempts = getIntent().getIntExtra("CorrectAttempts", 0);
+        gameName = getIntent().getStringExtra("gameName");
+        username = getIntent().getStringExtra("username");
+        dateAndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
         TextView scoreValue = findViewById(R.id.scoreValue);
         Button goToHomeButton = findViewById(R.id.goToHomeButton);
-        scoreValue.setText(String.valueOf(totalAttempts -(2* wrongAttempts)));
+        progressOverlay =findViewById(R.id.progress_overlay);
+        outAnimation = new AlphaAnimation(1f, 0f);
+        outAnimation.setDuration(200);
+        inAnimation = new AlphaAnimation(0f, 1f);
+        inAnimation.setDuration(200);
+        scoreValue.setText(String.valueOf( (2* correctAttempts)-totalAttempts));
         goToHomeButton.setOnClickListener(this::onClick);
         mediaPlayer = MediaPlayer.create(this, R.raw.win);
         mediaPlayer.start();
@@ -66,6 +113,41 @@ public class ShowScoreActivity extends AppCompatActivity {
             }
             mediaPlayer.release();
             startActivity(i);
+        }else if(view.getId()==R.id.saveScoreButton){
+            progressOverlay.setAnimation(inAnimation);
+            progressOverlay.setVisibility(View.VISIBLE);
+            Score score = new Score(gameName,dateAndTime,totalAttempts,correctAttempts);
+            String userId = user.getUid();
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers");
+            Query query = userRef.orderByChild("username").equalTo(username);
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if(snapshot.exists()){
+                        for (DataSnapshot snapshot1: snapshot.getChildren()){
+                            snapshot1.getRef().child("Scores").push().setValue(score).addOnCompleteListener(task -> {
+                                if(task.isSuccessful()){
+                                    Toast.makeText(ShowScoreActivity.this, "Score Saved", Toast.LENGTH_SHORT).show();
+                                }else{
+                                    Toast.makeText(ShowScoreActivity.this, "Score not saved", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            break;
+                        }
+                    }else{
+                        Log.i("Snapshot","not found");
+                    }
+                    progressOverlay.setAnimation(outAnimation);
+                    progressOverlay.setVisibility(View.GONE);
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.i("Database Error",error.toString());
+                    progressOverlay.setAnimation(outAnimation);
+                    progressOverlay.setVisibility(View.GONE);
+                }
+
+            });
         }
     }
     @Override

@@ -51,7 +51,7 @@ public class AddPlayerActivity extends AppCompatActivity {
         usernameEditText=findViewById(R.id.usernameEditText);
         submitButtonAddPlayer =findViewById(R.id.submitButtonAddPlayer);
         String userId = user.getUid();
-        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("users").child(userId);
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(userId);
         submitButtonAddPlayer.setOnClickListener(view -> {
             progressOverlay.setAnimation(inAnimation);
             progressOverlay.setVisibility(View.VISIBLE);

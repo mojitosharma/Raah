@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <RelativeLayout
-        android:id="@+id/relativeLayoutPlayerInfo"
+        android:id="@+id/relativeLayoutScoreInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -16,25 +16,23 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/studentNameTextView"
+            android:id="@+id/scoreTextView1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textSize="15sp" />
+        <TextView
+            android:id="@+id/gameNameTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:layout_below="@+id/scoreTextView1"/>
 
         <TextView
-            android:id="@+id/studentUsernameTextView"
+            android:id="@+id/dateAndTimeTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/studentNameTextView"/>
-        <ImageView
-            android:id="@+id/menuOfPlayerImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_alignEnd="@+id/studentNameTextView"
-            android:src="@drawable/baseline_more_vert_24"
-            android:contentDescription="menuPlayer" />
+            android:textSize="15sp"
+            android:layout_below="@+id/gameNameTextView"/>
 
     </RelativeLayout>
 

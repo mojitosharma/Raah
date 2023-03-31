@@ -33,4 +33,7 @@
     <string name="logo">Logo</string>
     <string name="player_list">Player List</string>
     <string name="log_out">Log Out</string>
+    <string name="are_you_sure_you_want_to_delete_this_item">Are you sure you want to delete this item?</string>
+    <string name="delete">Delete</string>
+    <string name="show_scores">Show Scores</string>
 </resources>

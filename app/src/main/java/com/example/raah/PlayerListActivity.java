@@ -1,26 +1,38 @@
 package com.example.raah;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -55,17 +67,20 @@ public class PlayerListActivity extends AppCompatActivity {
         playerListRecyclerView = findViewById(R.id.playerListRecyclerView);
         playerListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         dataList = new ArrayList<>();
-        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("users").child(uid);
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(uid);
 
         userRef.addValueEventListener(new ValueEventListener() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                dataList.clear();
                 for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
                     Student object = childSnapshot.getValue(Student.class);
                     dataList.add(object);
                 }
-                MyAdapter adapter = new MyAdapter(dataList);
+                MyAdapter adapter = new MyAdapter(dataList,userRef);
                 playerListRecyclerView.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
                 progressOverlay.setAnimation(outAnimation);
                 progressOverlay.setVisibility(View.GONE);
             }
@@ -83,9 +98,11 @@ public class PlayerListActivity extends AppCompatActivity {
     private class MyAdapter extends RecyclerView.Adapter<MyViewHolder> {
 
         private final List<Student> dataList;
+        private final DatabaseReference databaseReference;
 
-        public MyAdapter(List<Student> dataList) {
+        public MyAdapter(List<Student> dataList,DatabaseReference databaseReference) {
             this.dataList = dataList;
+            this.databaseReference = databaseReference;
         }
 
         @NonNull
@@ -97,10 +114,66 @@ public class PlayerListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(MyViewHolder holder, int position) {
-            Student data = dataList.get(position);
             //set Text View
-            holder.studentNameTextView.setText(data.getName());
-            holder.studentUsernameTextView.setText(data.getUsername());
+            final int p = holder.getAdapterPosition();
+            final Student myObject = dataList.get(p);
+            holder.studentNameTextView.setText(myObject.getName());
+            holder.studentUsernameTextView.setText(myObject.getUsername());
+            holder.relativeLayoutPlayerInfo.setOnClickListener(view -> {
+                Intent intent = new Intent(PlayerListActivity.this,ShowStudentProfileActivity.class);
+                intent.putExtra("username",myObject.getUsername());
+                startActivity(intent);
+            });
+            holder.menuOfPlayerImageView.setOnClickListener(view -> {
+                PopupMenu popupMenu = new PopupMenu(view.getContext(), holder.menuOfPlayerImageView);
+                popupMenu.getMenuInflater().inflate(R.menu.player_item_options, popupMenu.getMenu());
+
+                // Add click listeners for each menu item
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    if (item.getItemId() == R.id.menu_show_scores_item) {
+                        Intent intent = new Intent(PlayerListActivity.this,ShowStudentProfileActivity.class);
+                        intent.putExtra("username",myObject.getUsername());
+                        startActivity(intent);
+                        return true;
+                    }else if(item.getItemId() == R.id.menu_delete_item){
+                        AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+                        builder.setTitle("Confirm deletion")
+                                .setMessage("Are you sure you want to delete this student?")
+                                .setPositiveButton("Delete", (dialog, which) -> {
+
+                                    Query deleteQuery = databaseReference.orderByChild("username").equalTo(myObject.getUsername());
+                                    deleteQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            for (DataSnapshot appleSnapshot: dataSnapshot.getChildren()) {
+                                                appleSnapshot.getRef().removeValue((error, ref) -> {
+                                                    if(error==null){
+                                                        Toast.makeText(PlayerListActivity.this, myObject.getUsername()+" deleted", Toast.LENGTH_SHORT).show();
+                                                    }else{
+                                                        Toast.makeText(PlayerListActivity.this, "Could not delete", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
+                                                break;
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                            Log.e("DeleteStudent", "onCancelled", databaseError.toException());
+                                        }
+                                    });
+                                })
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                        return true;
+                    }else{
+                        return false;
+                    }
+                });
+
+                // Show the PopupMenu
+                popupMenu.show();
+            });
         }
 
         @Override
@@ -109,24 +182,18 @@ public class PlayerListActivity extends AppCompatActivity {
         }
     }
 
-    private class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private final LinearLayout linearLayoutPlayerInfo;
+    private class MyViewHolder extends RecyclerView.ViewHolder {
+        private final RelativeLayout relativeLayoutPlayerInfo;
         private final TextView studentUsernameTextView;
         private final TextView studentNameTextView;
+        private final ImageView menuOfPlayerImageView;
 
         public MyViewHolder(View itemView) {
             super(itemView);
             studentUsernameTextView = itemView.findViewById(R.id.studentUsernameTextView);
-            linearLayoutPlayerInfo = itemView.findViewById(R.id.linearLayoutPlayerInfo);
+            relativeLayoutPlayerInfo = itemView.findViewById(R.id.relativeLayoutPlayerInfo);
             studentNameTextView = itemView.findViewById(R.id.studentNameTextView);
-            linearLayoutPlayerInfo.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (v==linearLayoutPlayerInfo) {
-                Toast.makeText(PlayerListActivity.this, studentUsernameTextView.getText().toString(), Toast.LENGTH_SHORT).show();
-            }
+            menuOfPlayerImageView = itemView.findViewById(R.id.menuOfPlayerImageView);
         }
     }
 }
