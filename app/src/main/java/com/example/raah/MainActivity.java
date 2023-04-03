@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity{
         });
 
         startButton.setOnClickListener(view -> {
-            Intent intent = new Intent(this,GameScreen.class);
+            Intent intent = new Intent(this,SelectGameActivity.class);
             startActivity(intent);
         });
         playerListButton.setOnClickListener(view -> {

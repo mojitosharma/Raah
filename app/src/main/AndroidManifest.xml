@@ -27,6 +27,12 @@
         android:theme="@style/Theme.Raah"
         tools:targetApi="31">
         <activity
+            android:name=".SelectPlayerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SelectGameActivity"
+            android:exported="false" />
+        <activity
             android:name=".ShowStudentProfileActivity"
             android:exported="false" />
         <activity

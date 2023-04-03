@@ -19,8 +19,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -38,7 +36,6 @@ public class ShowScoreActivity extends AppCompatActivity {
     View progressOverlay;
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
-    private FirebaseAuth mAuth;
     private FirebaseUser user;
     private String username="";
     private int totalAttempts=0;
@@ -72,7 +69,7 @@ public class ShowScoreActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_score);
-        mAuth = FirebaseAuth.getInstance();
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
         if(user==null){
             Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
@@ -118,7 +115,7 @@ public class ShowScoreActivity extends AppCompatActivity {
             progressOverlay.setVisibility(View.VISIBLE);
             Score score = new Score(gameName,dateAndTime,totalAttempts,correctAttempts);
             String userId = user.getUid();
-            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers");
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(userId);
             Query query = userRef.orderByChild("username").equalTo(username);
             query.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override

@@ -25,16 +25,20 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Objects;
+
 public class GameScreen extends AppCompatActivity{
     private TextView currTextView, prevTextView,nextTextView;
     private LinearLayout aboveLinearLayout;
     private BluetoothService mBluetoothService;
     private boolean mBound = false;
     private MediaPlayer mediaPlayerCorrect,mediaPlayerWrong;
-    private int curr,prev,next,totalAttempts,wrongAttempts;
+    private int curr,prev,next,totalAttempts,wrongAttempts,diff;
     final int startColor = Color.WHITE;
     final int endColor1 = Color.RED;
     final int endColor2 = Color.GREEN;
+    String gameName="";
+    String username="";
     private ValueAnimator valueAnimator1,valueAnimator2;
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -73,6 +77,34 @@ public class GameScreen extends AppCompatActivity{
         }
     };
 
+    public void initialize(){
+        currTextView= findViewById(R.id.currTextView);
+        prevTextView =findViewById(R.id.prevTextView);
+        nextTextView=findViewById(R.id.nextTextView);
+        aboveLinearLayout=findViewById(R.id.aboveLinearLayout);
+        if(Objects.equals(gameName, "game1")){
+            diff=1;
+            curr=0;
+            prev=-1;
+            next=1;
+        }else if(Objects.equals(gameName, "game2")){
+            diff=2;
+            curr = 0;
+            prev = -2;
+            next = 2;
+        } else if (Objects.equals(gameName, "game3")) {
+            diff=2;
+            curr = 1;
+            prev = -1;
+            next = 3;
+        }
+        totalAttempts=0;
+        wrongAttempts=0;
+        currTextView.setText(String.valueOf(curr));
+        prevTextView.setText("");
+        nextTextView.setText(String.valueOf(next));
+    }
+
     @SuppressLint({"MissingPermission", "SetTextI18n"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,18 +115,9 @@ public class GameScreen extends AppCompatActivity{
         intentFilter= new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        currTextView= findViewById(R.id.currTextView);
-        prevTextView =findViewById(R.id.prevTextView);
-        nextTextView=findViewById(R.id.nextTextView);
-        aboveLinearLayout=findViewById(R.id.aboveLinearLayout);
-        curr=0;
-        prev=-1;
-        next=1;
-        totalAttempts=0;
-        wrongAttempts=0;
-        currTextView.setText(String.valueOf(curr));
-        prevTextView.setText("NA");
-        nextTextView.setText(String.valueOf(next));
+        gameName = getIntent().getStringExtra("gameName");
+        username = getIntent().getStringExtra("username");
+        initialize();
         valueAnimator1 = ValueAnimator.ofObject(new ArgbEvaluator(), startColor, endColor1);
         valueAnimator1.setDuration(100);
         valueAnimator1.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
@@ -149,16 +172,15 @@ public class GameScreen extends AppCompatActivity{
             prev=curr;
             curr=next;
             valueAnimator2.start();
-
-            if(curr<9){
-                next++;
-                nextTextView.setText(String.valueOf(next));
+            if(curr==9 || (curr==8 && gameName.equals("game2"))){
+                next=Integer.MAX_VALUE;
+                nextTextView.setText("Over");
                 currTextView.setText(String.valueOf(curr));
                 prevTextView.setText(String.valueOf(prev));
                 mediaPlayerCorrect.start();
-            }else if(curr==9){
-                next=Integer.MAX_VALUE;
-                nextTextView.setText("Over");
+            }else if(curr<9){
+                next+=diff;
+                nextTextView.setText(String.valueOf(next));
                 currTextView.setText(String.valueOf(curr));
                 prevTextView.setText(String.valueOf(prev));
                 mediaPlayerCorrect.start();
@@ -168,7 +190,9 @@ public class GameScreen extends AppCompatActivity{
                 mediaPlayerWrong.release();
                 Intent i = new Intent(GameScreen.this,ShowScoreActivity.class);
                 i.putExtra("TotalAttempts",totalAttempts);
-                i.putExtra("WrongAttempts",wrongAttempts);
+                i.putExtra("CorrectAttempts",totalAttempts-wrongAttempts);
+                i.putExtra("username",username);
+                i.putExtra("gameName",gameName);
                 mBluetoothService.stopReceive();
                 finish();
                 startActivity(i);
