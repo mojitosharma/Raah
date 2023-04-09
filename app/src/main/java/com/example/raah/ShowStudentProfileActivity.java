@@ -1,11 +1,14 @@
 package com.example.raah;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,12 +34,20 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
     View progressOverlay;
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
+    Toolbar toolbarStudentProfile;
     RecyclerView scoreListRecyclerView;
     ArrayList<Score> dataList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        };
+        this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_show_student_profile);
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
@@ -46,6 +57,10 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
         }
         String username = getIntent().getStringExtra("username");
         progressOverlay =findViewById(R.id.progress_overlay);
+        toolbarStudentProfile = findViewById(R.id.toolbarStudentProfile);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            toolbarStudentProfile.setTitle(username);
+        }
         outAnimation = new AlphaAnimation(1f, 0f);
         outAnimation.setDuration(200);
         inAnimation = new AlphaAnimation(0f, 1f);
@@ -118,10 +133,11 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
         public void onBindViewHolder(MyViewHolder holder, int position) {
             Score data = dataList.get(position);
             //set Text View
-            holder.scoreTextView1.setText("Correct: "+data.getCorrectAttempts()+"\n"+"Total Attempts: "+data.getTotalAttempts());
+            holder.scoreTextView1.setText("Score: "+ (data.getCorrectAttempts() - (0.5 * (data.getTotalAttempts() - data.getCorrectAttempts()))));
             holder.dateAndTimeTextView.setText("Date and Time: "+data.getDateAndTime());
             holder.gameNameTextView.setText("Game Name: "+data.getGameName());
-
+            holder.totalAttemptsTv.setText("Total Attempts: "+data.getTotalAttempts());
+            holder.correctAttemptsTv.setText("Correct Attempts: "+data.getCorrectAttempts());
         }
 
         @Override
@@ -134,12 +150,16 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
         private final TextView scoreTextView1;
         private final TextView gameNameTextView;
         private final TextView dateAndTimeTextView;
+        private final TextView totalAttemptsTv;
+        private final TextView correctAttemptsTv;
 
         public MyViewHolder(View itemView) {
             super(itemView);
             scoreTextView1 = itemView.findViewById(R.id.scoreTextView1);
             gameNameTextView = itemView.findViewById(R.id.gameNameTextView);
             dateAndTimeTextView = itemView.findViewById(R.id.dateAndTimeTextView);
+            correctAttemptsTv = itemView.findViewById((R.id.correctAttemptsTv));
+            totalAttemptsTv = itemView.findViewById(R.id.totalAttemptsTv);
         }
     }
 }

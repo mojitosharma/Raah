@@ -1,6 +1,7 @@
 package com.example.raah;
 
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.animation.Animator;
@@ -109,6 +110,13 @@ public class GameScreen extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        };
+        this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_game_screen);
         mediaPlayerWrong = MediaPlayer.create(this, R.raw.wrong);
         mediaPlayerCorrect = MediaPlayer.create(this, R.raw.correct);
@@ -198,10 +206,12 @@ public class GameScreen extends AppCompatActivity{
                 startActivity(i);
             }
         }else if(isNumeric(data)){
-            totalAttempts++;
-            wrongAttempts++;
-            mediaPlayerWrong.start();
-            valueAnimator1.start();
+            if(!data.equals(String.valueOf(prev))){
+                totalAttempts++;
+                wrongAttempts++;
+                mediaPlayerWrong.start();
+                valueAnimator1.start();
+            }
         }
     }
     public static boolean isNumeric(String strNum) {
@@ -227,6 +237,7 @@ public class GameScreen extends AppCompatActivity{
         mediaPlayerCorrect.release();
         mediaPlayerWrong.release();
         unregisterReceiver(mReceiver);
+        finish();
     }
 
 }

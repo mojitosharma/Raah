@@ -7,13 +7,26 @@
     android:layout_height="match_parent"
     tools:context=".PlayerListActivity">
   <include layout="@layout/layout_progress_overlay"/>
-  <androidx.recyclerview.widget.RecyclerView
+  <androidx.appcompat.widget.Toolbar
+      android:id="@+id/toolbarPlayerListActivity"
       android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:id="@+id/playerListRecyclerView"
+      android:layout_height="wrap_content"
+      android:background="?attr/colorPrimary"
+      android:minHeight="?attr/actionBarSize"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintTop_toTopOf="parent"
+      android:theme="?attr/actionBarTheme"
+      app:subtitleTextColor="@android:color/background_light"
+      app:title="Player List"
+      app:titleTextColor="@android:color/background_light" />
+  <androidx.recyclerview.widget.RecyclerView
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:id="@+id/playerListRecyclerView"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/toolbarPlayerListActivity"
       app:layout_constraintBottom_toBottomOf="parent"/>
 
 

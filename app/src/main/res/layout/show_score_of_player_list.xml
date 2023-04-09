@@ -19,33 +19,59 @@
             android:id="@+id/scoreTextView1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:textSize="20sp" />
+        <TextView
+            android:id="@+id/correctAttemptsTv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_margin="5dp"
+            android:textColor="@color/black"
+            android:layout_below="@+id/scoreTextView1"
+            android:textSize="15sp" />
+        <TextView
+            android:id="@+id/totalAttemptsTv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:layout_margin="5dp"
+            android:layout_below="@+id/correctAttemptsTv"
             android:textSize="15sp" />
         <TextView
             android:id="@+id/gameNameTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="15sp"
-            android:layout_below="@+id/scoreTextView1"/>
+            android:gravity="center"
+            android:layout_margin="5dp"
+            android:textColor="@color/black"
+            android:layout_below="@+id/totalAttemptsTv"/>
 
         <TextView
             android:id="@+id/dateAndTimeTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:layout_margin="5dp"
+            android:gravity="center"
             android:textSize="15sp"
             android:layout_below="@+id/gameNameTextView"/>
 
     </RelativeLayout>
-
     <View
-        android:id="@+id/divider1"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:background="?android:attr/listDivider"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/relativeLayoutPlayerInfo" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/relativeLayoutScoreInfo"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

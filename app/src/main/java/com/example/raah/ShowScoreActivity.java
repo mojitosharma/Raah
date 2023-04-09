@@ -1,5 +1,6 @@
 package com.example.raah;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,13 +37,13 @@ public class ShowScoreActivity extends AppCompatActivity {
     private IntentFilter intentFilter;
     View progressOverlay;
     AlphaAnimation inAnimation;
+    Button goToHomeButton;
+    Button playAgainButton;
+    ImageView animatedGif;
     AlphaAnimation outAnimation;
     private FirebaseUser user;
-    private String username="";
     private int totalAttempts=0;
     private int correctAttempts=0;
-    private String gameName="";
-    private String dateAndTime="";
     private MediaPlayer mediaPlayer;
 
     BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -64,10 +66,17 @@ public class ShowScoreActivity extends AppCompatActivity {
             }
         }
     };
-    @SuppressLint("SimpleDateFormat")
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                onClick(goToHomeButton);
+            }
+        };
+        this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_show_score);
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
@@ -83,22 +92,73 @@ public class ShowScoreActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(mReceiver, intentFilter);
+        initialize();
+    }
+    @SuppressLint("SimpleDateFormat")
+    public void initialize(){
         totalAttempts = getIntent().getIntExtra("TotalAttempts", 0);
         correctAttempts = getIntent().getIntExtra("CorrectAttempts", 0);
-        gameName = getIntent().getStringExtra("gameName");
-        username = getIntent().getStringExtra("username");
-        dateAndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
+        String gameName = getIntent().getStringExtra("gameName");
+        String username = getIntent().getStringExtra("username");
+        String dateAndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
         TextView scoreValue = findViewById(R.id.scoreValue);
-        Button goToHomeButton = findViewById(R.id.goToHomeButton);
+        goToHomeButton = findViewById(R.id.goToHomeButton);
+        playAgainButton =findViewById(R.id.playAgainButton);
         progressOverlay =findViewById(R.id.progress_overlay);
+        animatedGif=findViewById(R.id.animatedGif);
+        animatedGif.setVisibility(View.INVISIBLE);
         outAnimation = new AlphaAnimation(1f, 0f);
         outAnimation.setDuration(200);
         inAnimation = new AlphaAnimation(0f, 1f);
         inAnimation.setDuration(200);
-        scoreValue.setText(String.valueOf( (2* correctAttempts)-totalAttempts));
         goToHomeButton.setOnClickListener(this::onClick);
+        playAgainButton.setOnClickListener(this::onClick);
         mediaPlayer = MediaPlayer.create(this, R.raw.win);
-        mediaPlayer.start();
+        progressOverlay.setAnimation(inAnimation);
+        progressOverlay.setVisibility(View.VISIBLE);
+        Score score = new Score(gameName, dateAndTime,totalAttempts,correctAttempts);
+        String userId = user.getUid();
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(userId);
+        Query query = userRef.orderByChild("username").equalTo(username);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    for (DataSnapshot snapshot1: snapshot.getChildren()){
+                        snapshot1.getRef().child("Scores").push().setValue(score).addOnCompleteListener(task -> {
+                            if(task.isSuccessful()){
+                                Toast.makeText(ShowScoreActivity.this, "Score Saved", Toast.LENGTH_SHORT).show();
+//                                onClick(goToHomeButton);
+                            }else{
+                                Toast.makeText(ShowScoreActivity.this, "Score not saved", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        break;
+                    }
+                }else{
+                    Log.i("Snapshot","not found");
+                }
+                runOnUiThread(() -> {
+                    scoreValue.setText(String.valueOf( correctAttempts-(0.5*(totalAttempts-correctAttempts))));
+                    mediaPlayer.start();
+                    animatedGif.setVisibility(View.VISIBLE);
+                });
+                progressOverlay.setAnimation(outAnimation);
+                progressOverlay.setVisibility(View.GONE);
+
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.i("Database Error",error.toString());
+                progressOverlay.setAnimation(outAnimation);
+                progressOverlay.setVisibility(View.GONE);
+                runOnUiThread(() -> {
+                    scoreValue.setText(String.valueOf( correctAttempts-(0.5*(totalAttempts-correctAttempts))));
+                    mediaPlayer.start();
+                    animatedGif.setVisibility(View.VISIBLE);
+                });
+            }
+        });
     }
     public void onClick(View view){
         if (view.getId() == R.id.goToHomeButton) {
@@ -108,50 +168,18 @@ public class ShowScoreActivity extends AppCompatActivity {
                 i.putExtra("failedConnection", true); //This is just to make sure it does not reconnects
                 i.putExtra("ConnectionStatus",1);
             }
-            mediaPlayer.release();
+//            mediaPlayer.release();
             startActivity(i);
-        }else if(view.getId()==R.id.saveScoreButton){
-            progressOverlay.setAnimation(inAnimation);
-            progressOverlay.setVisibility(View.VISIBLE);
-            Score score = new Score(gameName,dateAndTime,totalAttempts,correctAttempts);
-            String userId = user.getUid();
-            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(userId);
-            Query query = userRef.orderByChild("username").equalTo(username);
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if(snapshot.exists()){
-                        for (DataSnapshot snapshot1: snapshot.getChildren()){
-                            snapshot1.getRef().child("Scores").push().setValue(score).addOnCompleteListener(task -> {
-                                if(task.isSuccessful()){
-                                    Toast.makeText(ShowScoreActivity.this, "Score Saved", Toast.LENGTH_SHORT).show();
-                                }else{
-                                    Toast.makeText(ShowScoreActivity.this, "Score not saved", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            break;
-                        }
-                    }else{
-                        Log.i("Snapshot","not found");
-                    }
-                    progressOverlay.setAnimation(outAnimation);
-                    progressOverlay.setVisibility(View.GONE);
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Log.i("Database Error",error.toString());
-                    progressOverlay.setAnimation(outAnimation);
-                    progressOverlay.setVisibility(View.GONE);
-                }
-
-            });
+        }else if(view.getId()==R.id.playAgainButton){
+            Intent i = new Intent(ShowScoreActivity.this, SelectGameActivity.class);
+//            mediaPlayer.release();
+            startActivity(i);
         }
     }
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mediaPlayer.release();
-        unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -165,5 +193,7 @@ public class ShowScoreActivity extends AppCompatActivity {
         super.onPause();
         mediaPlayer.release();
         unregisterReceiver(mReceiver);
+        finishAffinity();
+        finish();
     }
 }

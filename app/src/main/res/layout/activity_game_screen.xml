@@ -17,13 +17,14 @@
             android:layout_weight="0.4"
             android:background="@color/white"
             android:id="@+id/aboveLinearLayout">
+
             <TextView
                 android:id="@+id/currTextView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:gravity="center"
                 android:textColor="@color/black"
-                android:textSize="30sp"
-                android:gravity="center"/>
+                android:textSize="30sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/belowLinearLayout"

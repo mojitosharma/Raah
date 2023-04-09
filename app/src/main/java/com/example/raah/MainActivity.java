@@ -1,5 +1,6 @@
 package com.example.raah;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -105,6 +106,13 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        };
+        this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_main);
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
@@ -148,7 +156,9 @@ public class MainActivity extends AppCompatActivity{
             Log.i("testing123", String.valueOf(bluetoothAdapter==null));
 //            createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
 //            createConnectThread.start();
-            connectBluetoothDevice(bluetoothAdapter, Variables.deviceAddress);
+            if(bluetoothAdapter!=null){
+                connectBluetoothDevice(bluetoothAdapter, Variables.deviceAddress);
+            }
         }else{
             buttonConnect.setEnabled(true);
             startButton.setEnabled(false);
@@ -252,7 +262,9 @@ public class MainActivity extends AppCompatActivity{
         UUID uuid = bluetoothDevice.getUuids()[0].getUuid();
         if(mBluetoothService == null){
             Log.i("connectedBluetooth","null here");
-            Toast.makeText(this, "null error", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Something went wrong. Please try again!", Toast.LENGTH_SHORT).show();
+            finishAffinity();
+            recreate();
         }
         else {
             returned_value = mBluetoothService.connectBluetooth(uuid, address);
@@ -327,14 +339,10 @@ public class MainActivity extends AppCompatActivity{
         int id = item.getItemId();
         if (id == R.id.menu_logout && mAuth.getCurrentUser()!=null) {
             mAuth.signOut();
-            if(mAuth.getCurrentUser()==null){
-                Toast.makeText(mContext, "Logged out successfully", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, LoginOrSignUpActivity.class));
-                finishAffinity();
-                finish();
-            }else{
-                Toast.makeText(mContext, "Failed to log out", Toast.LENGTH_SHORT).show();
-            }
+            Toast.makeText(mContext, "Logged out successfully", Toast.LENGTH_SHORT).show();
+            finishAffinity();
+            finish();
+            startActivity(new Intent(this, LoginOrSignUpActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);

@@ -59,7 +59,6 @@ public class DeviceListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             Variables.deviceAddress=deviceInfoModel.getDeviceHardwareAddress();
             // Call MainActivity
             context.startActivity(intent);
-
         });
     }
 

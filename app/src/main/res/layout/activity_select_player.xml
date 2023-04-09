@@ -1,18 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SelectPlayerActivity">
-    <include layout="@layout/layout_progress_overlay"/>
-    <androidx.recyclerview.widget.RecyclerView
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarSelectPlayerActivity"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        app:subtitleTextColor="@android:color/background_light"
+        app:title="Select Player"
+        app:titleTextColor="@android:color/background_light" />
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/playerListRecyclerView1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        android:layout_width="match_parent"
+        android:layout_marginBottom="10dp"
+        android:layout_below="@id/toolbarSelectPlayerActivity"
+        android:layout_above="@id/selectPlayerLL"
+        android:layout_height="0dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="70dp"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/selectPlayerLL"
+        android:orientation="horizontal">
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/back"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="15dp"
+            android:id="@+id/selectPlayerBackButton"/>
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/start"
+            android:layout_gravity="center"
+            android:layout_marginEnd="30dp"
+            android:layout_marginStart="15dp"
+            android:layout_weight="1"
+            android:id="@+id/selectPlayerStartButton"/>
+    </LinearLayout>
+    <include layout="@layout/layout_progress_overlay"/>
+</RelativeLayout>

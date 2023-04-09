@@ -1,5 +1,6 @@
 package com.example.raah;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,10 +22,18 @@ import java.util.Set;
 
 public class SelectDeviceActivity extends AppCompatActivity {
 
+
     @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        };
+        this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_select_device);
         // Bluetooth Setup
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -59,10 +68,14 @@ public class SelectDeviceActivity extends AppCompatActivity {
             });
             snackbar.show();
         }
-
-
     }
-//    @Override
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        finish();
+    }
+    //    @Override
 //    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 //        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 //        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);

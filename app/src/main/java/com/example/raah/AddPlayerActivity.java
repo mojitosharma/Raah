@@ -1,5 +1,6 @@
 package com.example.raah;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,7 +24,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 public class AddPlayerActivity extends AppCompatActivity {
-    private FirebaseAuth mAuth;
     EditText usernameEditText,nameEditText;
     Button submitButtonAddPlayer;
     String name="";
@@ -35,8 +35,15 @@ public class AddPlayerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        };
+        this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_add_player);
-        mAuth = FirebaseAuth.getInstance();
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
         if(user==null){
             Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();

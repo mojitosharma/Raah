@@ -1,5 +1,6 @@
 package com.example.raah;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -12,12 +13,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -32,6 +36,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class SelectPlayerActivity extends AppCompatActivity {
@@ -39,7 +44,10 @@ public class SelectPlayerActivity extends AppCompatActivity {
     View progressOverlay;
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
+    int pos=-1;
+    String username="";
     RecyclerView playerListRecyclerView;
+    Button selectPlayerBackButton,selectPlayerStartButton;
     ArrayList<Student> dataList;
     IntentFilter intentFilter;
     BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -66,6 +74,13 @@ public class SelectPlayerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        };
+        this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_select_player);
         gameName = getIntent().getStringExtra("gameName");
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -78,11 +93,24 @@ public class SelectPlayerActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(mReceiver, intentFilter);
+        selectPlayerStartButton=findViewById(R.id.selectPlayerStartButton);
+        selectPlayerBackButton=findViewById(R.id.selectPlayerBackButton);
         progressOverlay =findViewById(R.id.progress_overlay);
         outAnimation = new AlphaAnimation(1f, 0f);
         outAnimation.setDuration(200);
         inAnimation = new AlphaAnimation(0f, 1f);
         inAnimation.setDuration(200);
+        selectPlayerStartButton.setEnabled(false);
+        selectPlayerBackButton.setOnClickListener(view -> onBackPressed());
+        selectPlayerStartButton.setOnClickListener(view -> {
+            if(!username.equals("")){
+                Intent intent = new Intent(SelectPlayerActivity.this, GameScreen.class);
+                Toast.makeText(this, username, Toast.LENGTH_SHORT).show();
+                intent.putExtra("username", username);
+                intent.putExtra("gameName", gameName);
+                startActivity(intent);
+            }
+        });
         progressOverlay.setAnimation(inAnimation);
         progressOverlay.setVisibility(View.VISIBLE);
         String uid = user.getUid();
@@ -99,6 +127,9 @@ public class SelectPlayerActivity extends AppCompatActivity {
                 for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
                     Student object = childSnapshot.getValue(Student.class);
                     dataList.add(object);
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    dataList.sort(Comparator.comparing(Student::getName));
                 }
                 MyAdapter adapter = new MyAdapter(dataList);
                 playerListRecyclerView.setAdapter(adapter);
@@ -131,19 +162,32 @@ public class SelectPlayerActivity extends AppCompatActivity {
             View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.player_list_info, parent, false);
             return new MyViewHolder(itemView);
         }
-
         @Override
         public void onBindViewHolder(MyViewHolder holder, int position) {
             //set Text View
             final int p = holder.getAdapterPosition();
             final Student myObject = dataList.get(p);
+            if(pos==-1){
+                holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.WHITE);
+            }else {
+                if(pos==p){
+                    holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.YELLOW);
+                }else {
+                    holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.WHITE);
+                }
+            }
             holder.studentNameTextView.setText(myObject.getName());
             holder.studentUsernameTextView.setText(myObject.getUsername());
             holder.relativeLayoutPlayerInfo.setOnClickListener(view -> {
-                Intent intent = new Intent(SelectPlayerActivity.this,GameScreen.class);
-                intent.putExtra("username",myObject.getUsername());
-                intent.putExtra("gameName",gameName);
-                startActivity(intent);
+                selectPlayerStartButton.setEnabled(true);
+                if(pos!=p){
+                    notifyItemChanged(pos);
+                }
+                pos = p;
+                holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.YELLOW);
+                pos=p;
+                username= myObject.getUsername();
+
             });
             holder.menuOfPlayerImageView.setEnabled(false);
             holder.menuOfPlayerImageView.setVisibility(View.INVISIBLE);
@@ -168,12 +212,9 @@ public class SelectPlayerActivity extends AppCompatActivity {
             studentNameTextView = itemView.findViewById(R.id.studentNameTextView);
             menuOfPlayerImageView = itemView.findViewById(R.id.menuOfPlayerImageView);
         }
+
     }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mReceiver);
-    }
+
 
     @Override
     protected void onResume() {

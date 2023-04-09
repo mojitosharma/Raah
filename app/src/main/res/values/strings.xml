@@ -36,4 +36,9 @@
     <string name="are_you_sure_you_want_to_delete_this_item">Are you sure you want to delete this item?</string>
     <string name="delete">Delete</string>
     <string name="show_scores">Show Scores</string>
+    <string name="back">Back</string>
+    <string name="start">Start</string>
+    <string name="hop_0_to_9">Hop 0 to 9</string>
+    <string name="hop_even_numbers">Hop Even Numbers</string>
+    <string name="hop_odd_numbers">Hop Odd Numbers</string>
 </resources>
