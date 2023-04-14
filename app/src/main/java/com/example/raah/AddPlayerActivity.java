@@ -4,6 +4,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -22,6 +23,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AddPlayerActivity extends AppCompatActivity {
     EditText usernameEditText,nameEditText;
@@ -64,6 +68,20 @@ public class AddPlayerActivity extends AppCompatActivity {
             progressOverlay.setVisibility(View.VISIBLE);
             name=nameEditText.getText().toString().trim();
             username=usernameEditText.getText().toString().trim();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if(!username.chars().allMatch(Character::isLetterOrDigit) || username.equals("")){
+                    Toast.makeText(this, "Username should only contains letters or digits", Toast.LENGTH_SHORT).show();
+                    progressOverlay.setAnimation(outAnimation);
+                    progressOverlay.setVisibility(View.GONE);
+                    return;
+                }
+                if (name.equals("") || !isLetterAndSpace(name) || name.contains("  ")){
+                    Toast.makeText(this, "Name should only contain letters and single space format", Toast.LENGTH_SHORT).show();
+                    progressOverlay.setAnimation(outAnimation);
+                    progressOverlay.setVisibility(View.GONE);
+                    return;
+                }
+            }
             Student student= new Student(name, username);
             // Query the user's node for objects with the same username
             Query query = userRef.orderByChild("username").equalTo(student.getUsername());
@@ -103,4 +121,10 @@ public class AddPlayerActivity extends AppCompatActivity {
             });
         });
     }
+    public static boolean isLetterAndSpace(String s) {
+        Pattern p = Pattern.compile("^[ A-Za-z]+$");
+        Matcher m = p.matcher(s);
+        return m.matches();
+    }
+
 }

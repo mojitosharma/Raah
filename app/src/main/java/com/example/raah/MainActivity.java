@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity{
     private Button startButton, buttonConnect,playerListButton;
     FloatingActionButton addNewPlayerButton;
     IntentFilter intentFilter;
-    String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN,Manifest.permission.BLUETOOTH_ADMIN,Manifest.permission.BLUETOOTH};
+    String[] permissions= new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.BLUETOOTH_SCAN,Manifest.permission.BLUETOOTH_ADMIN,Manifest.permission.BLUETOOTH,Manifest.permission.ACCESS_FINE_LOCATION};
 
     private static BluetoothService mBluetoothService;
     private boolean mBound = false;

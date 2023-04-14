@@ -41,4 +41,5 @@
     <string name="hop_0_to_9">Hop 0 to 9</string>
     <string name="hop_even_numbers">Hop Even Numbers</string>
     <string name="hop_odd_numbers">Hop Odd Numbers</string>
+    <string name="scan">Scan</string>
 </resources>

@@ -19,7 +19,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:subtitleTextColor="@android:color/background_light"
         app:title="Bluetooth Connection"
-        app:titleTextColor="@android:color/background_light" />
+        app:titleTextColor="@android:color/background_light" >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="@string/scan"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:layout_marginEnd="20dp"
+            android:id="@+id/scanTextView"/>
+    </androidx.appcompat.widget.Toolbar>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewDevice"
