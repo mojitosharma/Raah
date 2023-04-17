@@ -72,12 +72,14 @@ public class AddPlayerActivity extends AppCompatActivity {
         String userId = user.getUid();
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(userId);
         submitButtonAddPlayer.setOnClickListener(view -> {
-            if(!isInternetConnected(this)){
-                Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
-                return;
-            }
             progressOverlay.setAnimation(inAnimation);
             progressOverlay.setVisibility(View.VISIBLE);
+            if(!isInternetConnected(this)){
+                Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
+                progressOverlay.setAnimation(outAnimation);
+                progressOverlay.setVisibility(View.GONE);
+                return;
+            }
             name=nameEditText.getText().toString().trim();
             username=usernameEditText.getText().toString().trim();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

@@ -82,13 +82,13 @@ public class PlayerListActivity extends AppCompatActivity {
                 Toast.makeText(PlayerListActivity.this, "Please check your internet and try again.", Toast.LENGTH_SHORT).show();
             }
         });
+        mAuth = FirebaseAuth.getInstance();
+        user = mAuth.getCurrentUser();
+        if (user == null) {
+            Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if(isInternetConnected(this)){
-            mAuth = FirebaseAuth.getInstance();
-            user = mAuth.getCurrentUser();
-            if (user == null) {
-                Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
-                return;
-            }
             progressOverlay.setAnimation(inAnimation);
             progressOverlay.setVisibility(View.VISIBLE);
             loadData();

@@ -35,7 +35,6 @@ public class LoginOrSignUpActivity extends AppCompatActivity {
         }
         if(!isInternetConnected(this)){
             Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
-            return;
         }
         logoImageViewIntro = findViewById(R.id.logoImageViewIntro);
         logInButtonIntro = findViewById(R.id.logInButtonIntro);

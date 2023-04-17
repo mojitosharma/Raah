@@ -116,15 +116,15 @@ public class SelectPlayerActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        mAuth = FirebaseAuth.getInstance();
+        user = mAuth.getCurrentUser();
+        if(user==null){
+            Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if(!isInternetConnected(this)){
             Toast.makeText(this, "Please connect to internet to proceed", Toast.LENGTH_SHORT).show();
         }else{
-            mAuth = FirebaseAuth.getInstance();
-            user = mAuth.getCurrentUser();
-            if(user==null){
-                Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
-                return;
-            }
             progressOverlay.setAnimation(inAnimation);
             progressOverlay.setVisibility(View.VISIBLE);
             loadData();

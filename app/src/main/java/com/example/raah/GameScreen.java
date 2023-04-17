@@ -33,7 +33,7 @@ import java.util.Objects;
 
 public class GameScreen extends AppCompatActivity implements View.OnClickListener {
     private TextView currTextView, prevTextView,nextTextView,gameNameTextView;
-    Button gameScreenNextButton,gameScreenResetButton;
+    Button gameScreenNextButton,gameScreenResetButton,passButton;
     private ConstraintLayout constrainLayoutGameScreen;
     private BluetoothService mBluetoothService;
     private boolean mBound = false;
@@ -90,10 +90,12 @@ public class GameScreen extends AppCompatActivity implements View.OnClickListene
         gameScreenResetButton= findViewById(R.id.gameScreenResetButton);
         gameScreenNextButton = findViewById(R.id.gameScreenNextButton);
         gameNameTextView = findViewById(R.id.gameNameTextView);
+        passButton = findViewById(R.id.passButton);
         gameNameTextView.setText(gameName);
+        passButton.setOnClickListener(this);
         gameScreenResetButton.setOnClickListener(this);
         gameScreenNextButton.setOnClickListener(this);
-        gameScreenResetButton.performClick();
+        onClick(gameScreenResetButton);
     }
 
     @SuppressLint({"MissingPermission", "SetTextI18n"})
@@ -267,6 +269,8 @@ public class GameScreen extends AppCompatActivity implements View.OnClickListene
             mBluetoothService.stopReceive();
             finish();
             startActivity(i);
+        }else if (view.getId()==R.id.passButton){
+            receivedData(String.valueOf(curr));
         }
     }
 }
