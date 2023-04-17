@@ -42,4 +42,8 @@
     <string name="hop_even_numbers">Hop Even Numbers</string>
     <string name="hop_odd_numbers">Hop Odd Numbers</string>
     <string name="scan">Scan</string>
+    <string name="game_name">Game Name</string>
+    <string name="prev">Prev</string>
+    <string name="reset">Reset</string>
+    <string name="forgot_password_click_here_to_reset">Forgot Password? Click here to reset</string>
 </resources>

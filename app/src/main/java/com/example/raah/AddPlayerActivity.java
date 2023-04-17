@@ -4,6 +4,9 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,6 +38,11 @@ public class AddPlayerActivity extends AppCompatActivity {
     View progressOverlay;
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
+    public boolean isInternetConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +72,10 @@ public class AddPlayerActivity extends AppCompatActivity {
         String userId = user.getUid();
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(userId);
         submitButtonAddPlayer.setOnClickListener(view -> {
+            if(!isInternetConnected(this)){
+                Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             progressOverlay.setAnimation(inAnimation);
             progressOverlay.setVisibility(View.VISIBLE);
             name=nameEditText.getText().toString().trim();
@@ -102,6 +114,8 @@ public class AddPlayerActivity extends AppCompatActivity {
                                     Toast.makeText(AddPlayerActivity.this, "Player added", Toast.LENGTH_SHORT).show();
                                     usernameEditText.getText().clear();
                                     nameEditText.getText().clear();
+                                }else{
+                                    Toast.makeText(AddPlayerActivity.this, "Something went wrong.", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }else{

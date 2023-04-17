@@ -3,6 +3,7 @@ package com.example.raah;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -22,15 +23,18 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Objects;
 
-public class GameScreen extends AppCompatActivity{
-    private TextView currTextView, prevTextView,nextTextView;
-    private LinearLayout aboveLinearLayout;
+public class GameScreen extends AppCompatActivity implements View.OnClickListener {
+    private TextView currTextView, prevTextView,nextTextView,gameNameTextView;
+    Button gameScreenNextButton,gameScreenResetButton;
+    private ConstraintLayout constrainLayoutGameScreen;
     private BluetoothService mBluetoothService;
     private boolean mBound = false;
     private MediaPlayer mediaPlayerCorrect,mediaPlayerWrong;
@@ -82,28 +86,14 @@ public class GameScreen extends AppCompatActivity{
         currTextView= findViewById(R.id.currTextView);
         prevTextView =findViewById(R.id.prevTextView);
         nextTextView=findViewById(R.id.nextTextView);
-        aboveLinearLayout=findViewById(R.id.aboveLinearLayout);
-        if(Objects.equals(gameName, "game1")){
-            diff=1;
-            curr=0;
-            prev=-1;
-            next=1;
-        }else if(Objects.equals(gameName, "game2")){
-            diff=2;
-            curr = 0;
-            prev = -2;
-            next = 2;
-        } else if (Objects.equals(gameName, "game3")) {
-            diff=2;
-            curr = 1;
-            prev = -1;
-            next = 3;
-        }
-        totalAttempts=0;
-        wrongAttempts=0;
-        currTextView.setText(String.valueOf(curr));
-        prevTextView.setText("");
-        nextTextView.setText(String.valueOf(next));
+        constrainLayoutGameScreen = findViewById(R.id.constrainLayoutGameScreen);
+        gameScreenResetButton= findViewById(R.id.gameScreenResetButton);
+        gameScreenNextButton = findViewById(R.id.gameScreenNextButton);
+        gameNameTextView = findViewById(R.id.gameNameTextView);
+        gameNameTextView.setText(gameName);
+        gameScreenResetButton.setOnClickListener(this);
+        gameScreenNextButton.setOnClickListener(this);
+        gameScreenResetButton.performClick();
     }
 
     @SuppressLint({"MissingPermission", "SetTextI18n"})
@@ -118,7 +108,7 @@ public class GameScreen extends AppCompatActivity{
         };
         this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_game_screen);
-        mediaPlayerWrong = MediaPlayer.create(this, R.raw.wrong);
+//        mediaPlayerWrong = MediaPlayer.create(this, R.raw.wrong);
         mediaPlayerCorrect = MediaPlayer.create(this, R.raw.correct);
         intentFilter= new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -128,7 +118,7 @@ public class GameScreen extends AppCompatActivity{
         initialize();
         valueAnimator1 = ValueAnimator.ofObject(new ArgbEvaluator(), startColor, endColor1);
         valueAnimator1.setDuration(100);
-        valueAnimator1.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+        valueAnimator1.addUpdateListener(animator -> constrainLayoutGameScreen.setBackgroundColor((int) animator.getAnimatedValue()));
 
         valueAnimator1.addListener(new AnimatorListenerAdapter() {
 
@@ -137,20 +127,20 @@ public class GameScreen extends AppCompatActivity{
                 super.onAnimationEnd(animation);
                 final ValueAnimator reverseColorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), endColor1, startColor);
                 reverseColorAnimation.setDuration(400);
-                reverseColorAnimation.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+                reverseColorAnimation.addUpdateListener(animator -> constrainLayoutGameScreen.setBackgroundColor((int) animator.getAnimatedValue()));
                 reverseColorAnimation.start();
             }
         });
         valueAnimator2 = ValueAnimator.ofObject(new ArgbEvaluator(), startColor, endColor2);
         valueAnimator2.setDuration(100);
-        valueAnimator2.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+        valueAnimator2.addUpdateListener(animator -> constrainLayoutGameScreen.setBackgroundColor((int) animator.getAnimatedValue()));
         valueAnimator2.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 final ValueAnimator reverseColorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), endColor2, startColor);
                 reverseColorAnimation.setDuration(400);
-                reverseColorAnimation.addUpdateListener(animator -> aboveLinearLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+                reverseColorAnimation.addUpdateListener(animator -> constrainLayoutGameScreen.setBackgroundColor((int) animator.getAnimatedValue()));
                 reverseColorAnimation.start();
             }
         });
@@ -164,7 +154,7 @@ public class GameScreen extends AppCompatActivity{
     protected void onDestroy() {
         super.onDestroy();
         mediaPlayerCorrect.release();
-        mediaPlayerWrong.release();
+//        mediaPlayerWrong.release();
         mBluetoothService.sendData("0".getBytes());
         if(mBound){
             unbindService(mConnection);
@@ -195,7 +185,7 @@ public class GameScreen extends AppCompatActivity{
             }else{
                 mBluetoothService.sendData("0".getBytes());
                 mediaPlayerCorrect.release();
-                mediaPlayerWrong.release();
+//                mediaPlayerWrong.release();
                 Intent i = new Intent(GameScreen.this,ShowScoreActivity.class);
                 i.putExtra("TotalAttempts",totalAttempts);
                 i.putExtra("CorrectAttempts",totalAttempts-wrongAttempts);
@@ -209,7 +199,7 @@ public class GameScreen extends AppCompatActivity{
             if(!data.equals(String.valueOf(prev))){
                 totalAttempts++;
                 wrongAttempts++;
-                mediaPlayerWrong.start();
+//                mediaPlayerWrong.start();
                 valueAnimator1.start();
             }
         }
@@ -235,160 +225,49 @@ public class GameScreen extends AppCompatActivity{
     protected void onPause() {
         super.onPause();
         mediaPlayerCorrect.release();
-        mediaPlayerWrong.release();
+//        mediaPlayerWrong.release();
         unregisterReceiver(mReceiver);
         finish();
     }
 
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        if(id == R.id.gameScreenResetButton){
+            if(Objects.equals(gameName, "Hop 0 to 9")){
+                diff=1;
+                curr=0;
+                prev=-1;
+                next=1;
+            }else if(Objects.equals(gameName, "Hop Even Numbers")){
+                diff=2;
+                curr = 0;
+                prev = -2;
+                next = 2;
+            } else if (Objects.equals(gameName, "Hop Odd Numbers")) {
+                diff=2;
+                curr = 1;
+                prev = -1;
+                next = 3;
+            }
+            totalAttempts=0;
+            wrongAttempts=0;
+            currTextView.setText(String.valueOf(curr));
+            prevTextView.setText("");
+            nextTextView.setText(String.valueOf(next));
+        } else if (id == R.id.gameScreenNextButton) {
+            mBluetoothService.sendData("0".getBytes());
+            mediaPlayerCorrect.release();
+//            mediaPlayerWrong.release();
+            Intent i = new Intent(GameScreen.this,ShowScoreActivity.class);
+            i.putExtra("TotalAttempts",totalAttempts);
+            i.putExtra("CorrectAttempts",totalAttempts-wrongAttempts);
+            i.putExtra("username",username);
+            i.putExtra("gameName",gameName);
+            mBluetoothService.stopReceive();
+            finish();
+            startActivity(i);
+        }
+    }
 }
-
-//        connectedThread = new ConnectedThread(mmSocket);
-//        connectedThread.run();
-
-         /*
-        Second most important piece of Code. GUI Handler
-         */
-//        handler = new Handler(Looper.getMainLooper()) {
-//            @Override
-//            public void handleMessage(Message msg){
-//                if (msg.what == MESSAGE_READ) {
-//                    byte[] data = (byte[]) msg.obj;
-//                    String receivedData = new String(data, 0, msg.arg1);
-//                    try {
-//                        float value = Float.parseFloat(receivedData.trim());
-//                        mReceivedData.add(value);
-//                        if (mReceivedData.size() == 10) {
-//                            onDataReceived(mReceivedData);
-//                            mReceivedData.clear();
-//                        }
-//                    } catch (NumberFormatException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        };
-
-
-
-// Button to ON/OFF LED on Arduino Board
-//        buttonToggle.setOnClickListener(view -> {
-//            String cmdText = null;
-//            String btnState = buttonToggle.getText().toString().toLowerCase();
-//            switch (btnState){
-//                case "turn on":
-//                    buttonToggle.setText(R.string.turn_off);
-//                    // Command to turn on LED on Arduino. Must match with the command in Arduino code
-//                    cmdText = "<turn on>";
-//
-//                    break;
-//                case "turn off":
-//                    buttonToggle.setText(R.string.turn_on);
-//                    // Command to turn off LED on Arduino. Must match with the command in Arduino code
-//                    cmdText = "<turn off>";
-//                    break;
-//            }
-//            if(cmdText!=null){
-//                cmdText = "2";
-//                Log.i("SendFromGame",cmdText);
-//                byte[] byteArray = cmdText.getBytes();
-//                mBluetoothService.sendData(byteArray);
-//            }else{
-//                Toast.makeText(mContext, "Something went wrong. Please try again.", Toast.LENGTH_SHORT).show();
-//            }
-//            // Send command to Arduino board
-////            connectedThread.write(cmdText);
-//        });
-//    private void onDataReceived(List<Float> data) {
-//        StringBuilder sb = new StringBuilder();
-//        for (float value : data) {
-//            sb.append(value).append(" ");
-//        }
-//        final String receivedData = sb.toString().trim();
-//        runOnUiThread(() -> textViewInfo.setText(receivedData));
-//    }
-
-/* =============================== Thread for Data Transfer =========================================== */
-//    public static class ConnectedThread extends Thread {
-//        private final BluetoothSocket mmSocket;
-//        private final InputStream mmInStream;
-//        private final OutputStream mmOutStream;
-//
-//        public ConnectedThread(BluetoothSocket socket) {
-//            Toast.makeText(mContext , "In constructor 1", Toast.LENGTH_SHORT).show();
-//            mmSocket = socket;
-//            InputStream tmpIn = null;
-//            OutputStream tmpOut = null;
-//            Toast.makeText(mContext , "In constructor 2", Toast.LENGTH_SHORT).show();
-//
-//            // Get the input and output streams, using temp objects because
-//            // member streams are final
-//            try {
-//                tmpIn = socket.getInputStream();
-//                tmpOut = socket.getOutputStream();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            mmInStream = tmpIn;
-//            mmOutStream = tmpOut;
-//            Toast.makeText(mContext , "In constructor end", Toast.LENGTH_SHORT).show();
-//        }
-//
-//        public void run() {
-//            Toast.makeText(mContext , "In run 1", Toast.LENGTH_SHORT).show();
-//            byte[] buffer = new byte[1024];  // buffer store for the stream
-//            int bytes = 0; // bytes returned from read()
-//            // Keep listening to the InputStream until an exception occurs
-//            while (true) {
-//                try {
-//                    /*
-//                    Read from the InputStream from Arduino until termination character is reached.
-//                    Then send the whole String message to GUI Handler.
-//                     */
-//                    if(mmInStream.available()  > 0){
-//                        Log.i("mmInStream", "run: mmInStream 1");
-//                        buffer[bytes] = (byte) mmInStream.read();
-//                        Log.i("mmInStream", "run: mmInStream 2");
-//                    }
-//                    else{
-//                        Log.i("mmInStream", "run: mmInStream");
-//                        cancel();
-//                    }
-//
-////                    String readMessage;
-//                    if (buffer[bytes] == '\n'){
-////                        readMessage = new String(buffer,0,bytes);
-////                        Log.e("Arduino Message",readMessage);
-//                        handler.obtainMessage(MESSAGE_READ,bytes,-1,buffer).sendToTarget();
-//                        bytes = 0;
-//                    } else {
-//                        bytes++;
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    break;
-//                }
-//            }
-//        }
-//
-//        /* Call this from the main activity to send data to the remote device */
-//        public void write(String input) {
-//
-//            byte[] bytes = input.getBytes(); //converts entered String into bytes
-//            try {
-//                mmOutStream.write(bytes);
-//                Toast.makeText(mContext , "In write", Toast.LENGTH_SHORT).show();
-//            } catch (IOException e) {
-//                Log.e("Send Error","Unable to send message",e);
-//            }
-//        }
-//
-//        /* Call this from the main activity to shutdown the connection */
-//        public void cancel() {
-//            try {
-//                mmSocket.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 

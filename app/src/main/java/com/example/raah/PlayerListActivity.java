@@ -9,7 +9,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,10 +40,18 @@ import java.util.List;
 
 public class PlayerListActivity extends AppCompatActivity {
     View progressOverlay;
+    FirebaseAuth mAuth;
+    FirebaseUser user;
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
     RecyclerView playerListRecyclerView;
     ArrayList<Student> dataList;
+    ImageView refreshPlayerListButton;
+    public boolean isInternetConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,23 +64,41 @@ public class PlayerListActivity extends AppCompatActivity {
         };
         this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_player_list);
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        FirebaseUser user = mAuth.getCurrentUser();
-        if(user==null){
-            Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
-            return;
-        }
         progressOverlay =findViewById(R.id.progress_overlay);
         outAnimation = new AlphaAnimation(1f, 0f);
         outAnimation.setDuration(200);
         inAnimation = new AlphaAnimation(0f, 1f);
         inAnimation.setDuration(200);
-        progressOverlay.setAnimation(inAnimation);
-        progressOverlay.setVisibility(View.VISIBLE);
-        String uid = user.getUid();
         playerListRecyclerView = findViewById(R.id.playerListRecyclerView);
         playerListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         dataList = new ArrayList<>();
+        refreshPlayerListButton=findViewById(R.id.refreshPlayerListButton);
+        refreshPlayerListButton.setOnClickListener(view -> {
+            if(isInternetConnected(PlayerListActivity.this)){
+                progressOverlay.setAnimation(inAnimation);
+                progressOverlay.setVisibility(View.VISIBLE);
+                loadData();
+            }else{
+                Toast.makeText(PlayerListActivity.this, "Please check your internet and try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+        if(isInternetConnected(this)){
+            mAuth = FirebaseAuth.getInstance();
+            user = mAuth.getCurrentUser();
+            if (user == null) {
+                Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            progressOverlay.setAnimation(inAnimation);
+            progressOverlay.setVisibility(View.VISIBLE);
+            loadData();
+        }else{
+            Toast.makeText(this, "Please check your internet and try again.", Toast.LENGTH_SHORT).show();
+        }
+    }
+    public void loadData(){
+        refreshPlayerListButton.setEnabled(false);
+        String uid = user.getUid();
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(uid);
 
         userRef.addValueEventListener(new ValueEventListener() {
@@ -89,6 +118,7 @@ public class PlayerListActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
                 progressOverlay.setAnimation(outAnimation);
                 progressOverlay.setVisibility(View.GONE);
+                refreshPlayerListButton.setEnabled(true);
             }
 
             @Override
@@ -97,7 +127,7 @@ public class PlayerListActivity extends AppCompatActivity {
                 Log.i("FetchStudent","failed");
                 progressOverlay.setAnimation(outAnimation);
                 progressOverlay.setVisibility(View.GONE);
-
+                refreshPlayerListButton.setEnabled(true);
             }
         });
     }
@@ -126,9 +156,13 @@ public class PlayerListActivity extends AppCompatActivity {
             holder.studentNameTextView.setText(myObject.getName());
             holder.studentUsernameTextView.setText(myObject.getUsername());
             holder.relativeLayoutPlayerInfo.setOnClickListener(view -> {
-                Intent intent = new Intent(PlayerListActivity.this,ShowStudentProfileActivity.class);
-                intent.putExtra("username",myObject.getUsername());
-                startActivity(intent);
+                if(isInternetConnected(view.getContext())){
+                    Intent intent = new Intent(PlayerListActivity.this, ShowStudentProfileActivity.class);
+                    intent.putExtra("username", myObject.getUsername());
+                    startActivity(intent);
+                }else{
+                    Toast.makeText(PlayerListActivity.this, "Please check your internet connection.", Toast.LENGTH_SHORT).show();
+                }
             });
             holder.menuOfPlayerImageView.setOnClickListener(view -> {
                 PopupMenu popupMenu = new PopupMenu(view.getContext(), holder.menuOfPlayerImageView);
@@ -137,11 +171,19 @@ public class PlayerListActivity extends AppCompatActivity {
                 // Add click listeners for each menu item
                 popupMenu.setOnMenuItemClickListener(item -> {
                     if (item.getItemId() == R.id.menu_show_scores_item) {
-                        Intent intent = new Intent(PlayerListActivity.this,ShowStudentProfileActivity.class);
-                        intent.putExtra("username",myObject.getUsername());
-                        startActivity(intent);
+                        if(isInternetConnected(view.getContext())){
+                            Intent intent = new Intent(PlayerListActivity.this, ShowStudentProfileActivity.class);
+                            intent.putExtra("username", myObject.getUsername());
+                            startActivity(intent);
+                        }else{
+                            Toast.makeText(PlayerListActivity.this, "Please check your internet connection.", Toast.LENGTH_SHORT).show();
+                        }
                         return true;
                     }else if(item.getItemId() == R.id.menu_delete_item){
+                        if(!isInternetConnected(view.getContext())){
+                            Toast.makeText(PlayerListActivity.this, "Please check your internet connection.", Toast.LENGTH_SHORT).show();
+                            return true;
+                        }
                         AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
                         builder.setTitle("Confirm deletion")
                                 .setMessage("Are you sure you want to delete this student?")

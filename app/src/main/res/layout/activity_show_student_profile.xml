@@ -16,7 +16,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:subtitleTextColor="@android:color/background_light"
-        app:titleTextColor="@android:color/background_light" />
+        app:titleTextColor="@android:color/background_light" >
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/refreshProfileButton"
+            android:layout_gravity="end"
+            android:layout_marginHorizontal="20dp"
+            android:src="@drawable/baseline_refresh_24"
+            android:contentDescription="Refresh" />
+    </androidx.appcompat.widget.Toolbar>
     <include layout="@layout/layout_progress_overlay"/>
 
     <androidx.recyclerview.widget.RecyclerView

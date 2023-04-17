@@ -8,6 +8,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,9 +38,18 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
     View progressOverlay;
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
+    String username = "";
     Toolbar toolbarStudentProfile;
     RecyclerView scoreListRecyclerView;
     ArrayList<Score> dataList;
+    ImageView refreshProfileButton;
+    FirebaseUser user;
+    FirebaseAuth mAuth;
+    public boolean isInternetConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,26 +62,42 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
         };
         this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_show_student_profile);
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        FirebaseUser user = mAuth.getCurrentUser();
-        if(user==null){
-            Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        String username = getIntent().getStringExtra("username");
+        username = getIntent().getStringExtra("username");
         progressOverlay =findViewById(R.id.progress_overlay);
         toolbarStudentProfile = findViewById(R.id.toolbarStudentProfile);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             toolbarStudentProfile.setTitle(username);
         }
         outAnimation = new AlphaAnimation(1f, 0f);
         outAnimation.setDuration(200);
         inAnimation = new AlphaAnimation(0f, 1f);
         inAnimation.setDuration(200);
-        progressOverlay.setAnimation(inAnimation);
-        progressOverlay.setVisibility(View.VISIBLE);
+        if(isInternetConnected(this)){
+            mAuth = FirebaseAuth.getInstance();
+            user = mAuth.getCurrentUser();
+            if(user==null){
+                Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            progressOverlay.setAnimation(inAnimation);
+            progressOverlay.setVisibility(View.VISIBLE);
+            loadData();
+        }
+        refreshProfileButton.setOnClickListener(view -> {
+            if(isInternetConnected(ShowStudentProfileActivity.this)){
+                progressOverlay.setAnimation(inAnimation);
+                progressOverlay.setVisibility(View.VISIBLE);
+                loadData();
+            }else{
+                Toast.makeText(ShowStudentProfileActivity.this, "Please check your internet and try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    public void loadData(){
+        refreshProfileButton.setEnabled(false);
         String uid = user.getUid();
         scoreListRecyclerView = findViewById(R.id.scoreListRecyclerView);
+        refreshProfileButton=findViewById(R.id.refreshProfileButton);
         scoreListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         dataList = new ArrayList<>();
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(uid);
@@ -91,6 +120,7 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
                             adapter.notifyDataSetChanged();
                             progressOverlay.setAnimation(outAnimation);
                             progressOverlay.setVisibility(View.GONE);
+                            refreshProfileButton.setEnabled(true);
                         }
 
                         @Override
@@ -99,6 +129,7 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
                             Log.i("FetchStudent","failed");
                             progressOverlay.setAnimation(outAnimation);
                             progressOverlay.setVisibility(View.GONE);
+                            refreshProfileButton.setEnabled(true);
 
                         }
                     });

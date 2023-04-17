@@ -82,22 +82,31 @@ public class SelectGameActivity extends AppCompatActivity implements View.OnClic
         int id = view.getId();
         if(id==R.id.game1TextView){
             selectGameNextButton.setEnabled(true);
-            game1TextView.setBackgroundColor(Color.YELLOW);
+            game1TextView.setBackgroundColor(getResources().getColor(R.color.purple_500));
             game2TextView.setBackgroundColor(Color.WHITE);
             game3TextView.setBackgroundColor(Color.WHITE);
-            gameName="game1";
+            game1TextView.setTextColor(Color.WHITE);
+            game2TextView.setTextColor(Color.BLACK);
+            game3TextView.setTextColor(Color.BLACK);
+            gameName="Hop 0 to 9";
         }else if(id==R.id.game2TextView){
             selectGameNextButton.setEnabled(true);
             game1TextView.setBackgroundColor(Color.WHITE);
-            game2TextView.setBackgroundColor(Color.YELLOW);
+            game2TextView.setBackgroundColor(getResources().getColor(R.color.purple_500));
             game3TextView.setBackgroundColor(Color.WHITE);
-            gameName="game2";
+            game1TextView.setTextColor(Color.BLACK);
+            game2TextView.setTextColor(Color.WHITE);
+            game3TextView.setTextColor(Color.BLACK);
+            gameName="Hop Even Numbers";
         }else if (id ==R.id.game3TextView){
             selectGameNextButton.setEnabled(true);
             game1TextView.setBackgroundColor(Color.WHITE);
             game2TextView.setBackgroundColor(Color.WHITE);
-            game3TextView.setBackgroundColor(Color.YELLOW);
-            gameName="game3";
+            game3TextView.setBackgroundColor(getResources().getColor(R.color.purple_500));
+            game1TextView.setTextColor(Color.BLACK);
+            game2TextView.setTextColor(Color.BLACK);
+            game3TextView.setTextColor(Color.WHITE);
+            gameName="Hop Odd Numbers";
         }else if(id==R.id.selectGameBackButton){
             onBackPressed();
         }else if (id==R.id.selectGameNextButton){

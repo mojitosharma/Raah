@@ -4,9 +4,13 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Patterns;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.Button;
@@ -29,7 +33,12 @@ public class LoginActivity extends AppCompatActivity {
     private String pw="";
     Button submitButtonSignIn;
     EditText emailEditText, passwordEditText;
-    TextView headingLogInTextView;
+    TextView headingLogInTextView,forgotPasswordTextView;
+    public boolean isInternetConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +51,9 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
         this.getOnBackPressedDispatcher().addCallback(this, callback);
+        if(!isInternetConnected(this)){
+            Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
+        }
         mAuth = FirebaseAuth.getInstance();
         type = getIntent().getStringExtra("loginOrSignUp");
         if(type.equals("")){
@@ -53,25 +65,60 @@ public class LoginActivity extends AppCompatActivity {
         emailEditText=findViewById(R.id.editTextTextEmailAddress);
         passwordEditText=findViewById(R.id.editTextTextPassword);
         progressOverlay =findViewById(R.id.progress_overlay);
+        forgotPasswordTextView=findViewById(R.id.forgotPasswordTextView);
         outAnimation = new AlphaAnimation(1f, 0f);
         outAnimation.setDuration(200);
         inAnimation = new AlphaAnimation(0f, 1f);
         inAnimation.setDuration(200);
-        if(type.equals("login")){
-            headingLogInTextView.setText(R.string.sign_in);
-            submitButtonSignIn.setText(R.string.sign_in);
-        }else if(type.equals("signup")){
-            headingLogInTextView.setText(R.string.sign_up);
-            submitButtonSignIn.setText(R.string.sign_up);
-        }else if(type.equals("loggedIn")){
-            Intent intent= null;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                intent = new Intent(LoginActivity.this, MainActivity.class);
+        forgotPasswordTextView.setOnClickListener(view -> {
+            if(!isInternetConnected(this)){
+                Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
+                return;
             }
-            finish();
-            startActivity(intent);
+            email = emailEditText.getText().toString().trim();
+            if(email.equals("")){
+                Toast.makeText(LoginActivity.this, "Please enter your mail id to get reset link", Toast.LENGTH_SHORT).show();
+            }else if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+                emailEditText.setError("Invalid Email");
+                emailEditText.requestFocus();
+                Toast.makeText(LoginActivity.this, "Please enter valid email", Toast.LENGTH_SHORT).show();
+            }else{
+                mAuth.sendPasswordResetEmail(email).addOnCompleteListener(task -> {
+                    if(task.isSuccessful()){
+                        Toast.makeText(LoginActivity.this, "Password Reset Mail sent.", Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(LoginActivity.this, "Reset Failed", Toast.LENGTH_SHORT).show();
+                        emailEditText.requestFocus();
+                    }
+                });
+            }
+        });
+        switch (type) {
+            case "login":
+                headingLogInTextView.setText(R.string.sign_in);
+                submitButtonSignIn.setText(R.string.sign_in);
+                break;
+            case "signup":
+                headingLogInTextView.setText(R.string.sign_up);
+                submitButtonSignIn.setText(R.string.sign_up);
+                forgotPasswordTextView.setEnabled(false);
+                forgotPasswordTextView.setVisibility(View.INVISIBLE);
+                break;
+            case "loggedIn":
+                Intent intent = null;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    intent = new Intent(LoginActivity.this, MainActivity.class);
+                }
+                finish();
+                startActivity(intent);
+                break;
         }
+
         submitButtonSignIn.setOnClickListener(view -> {
+            if(!isInternetConnected(this)){
+                Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             email=emailEditText.getText().toString().trim();
             pw = passwordEditText.getText().toString();
             if(email.equals("") || pw.equals("")) {

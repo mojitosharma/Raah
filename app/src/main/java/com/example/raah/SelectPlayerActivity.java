@@ -14,6 +14,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -43,7 +45,10 @@ public class SelectPlayerActivity extends AppCompatActivity {
     String gameName="";
     View progressOverlay;
     AlphaAnimation inAnimation;
+    FirebaseUser user;
+    FirebaseAuth mAuth;
     AlphaAnimation outAnimation;
+    ImageView refreshSelectPlayerButton;
     int pos=-1;
     String username="";
     RecyclerView playerListRecyclerView;
@@ -70,7 +75,11 @@ public class SelectPlayerActivity extends AppCompatActivity {
             }
         }
     };
-
+    public boolean isInternetConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,19 +91,15 @@ public class SelectPlayerActivity extends AppCompatActivity {
         };
         this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_select_player);
+
         gameName = getIntent().getStringExtra("gameName");
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        FirebaseUser user = mAuth.getCurrentUser();
-        if(user==null){
-            Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
-            return;
-        }
         intentFilter= new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(mReceiver, intentFilter);
         selectPlayerStartButton=findViewById(R.id.selectPlayerStartButton);
         selectPlayerBackButton=findViewById(R.id.selectPlayerBackButton);
+        refreshSelectPlayerButton=findViewById(R.id.refreshSelectPlayerButton);
         progressOverlay =findViewById(R.id.progress_overlay);
         outAnimation = new AlphaAnimation(1f, 0f);
         outAnimation.setDuration(200);
@@ -111,8 +116,31 @@ public class SelectPlayerActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        progressOverlay.setAnimation(inAnimation);
-        progressOverlay.setVisibility(View.VISIBLE);
+        if(!isInternetConnected(this)){
+            Toast.makeText(this, "Please connect to internet to proceed", Toast.LENGTH_SHORT).show();
+        }else{
+            mAuth = FirebaseAuth.getInstance();
+            user = mAuth.getCurrentUser();
+            if(user==null){
+                Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            progressOverlay.setAnimation(inAnimation);
+            progressOverlay.setVisibility(View.VISIBLE);
+            loadData();
+        }
+        refreshSelectPlayerButton.setOnClickListener(view -> {
+            if(isInternetConnected(SelectPlayerActivity.this)){
+                progressOverlay.setAnimation(inAnimation);
+                progressOverlay.setVisibility(View.VISIBLE);
+                loadData();
+            }else{
+                Toast.makeText(SelectPlayerActivity.this, "Please check your internet and try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    public void loadData(){
+        refreshSelectPlayerButton.setEnabled(false);
         String uid = user.getUid();
         playerListRecyclerView = findViewById(R.id.playerListRecyclerView1);
         playerListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -136,6 +164,7 @@ public class SelectPlayerActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
                 progressOverlay.setAnimation(outAnimation);
                 progressOverlay.setVisibility(View.GONE);
+                refreshSelectPlayerButton.setEnabled(true);
             }
 
             @Override
@@ -144,7 +173,7 @@ public class SelectPlayerActivity extends AppCompatActivity {
                 Log.i("FetchStudent","failed");
                 progressOverlay.setAnimation(outAnimation);
                 progressOverlay.setVisibility(View.GONE);
-
+                refreshSelectPlayerButton.setEnabled(true);
             }
         });
     }
@@ -169,11 +198,17 @@ public class SelectPlayerActivity extends AppCompatActivity {
             final Student myObject = dataList.get(p);
             if(pos==-1){
                 holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.WHITE);
+                holder.studentNameTextView.setTextColor(Color.BLACK);
+                holder.studentUsernameTextView.setTextColor(Color.BLACK);
             }else {
                 if(pos==p){
-                    holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.YELLOW);
+                    holder.relativeLayoutPlayerInfo.setBackgroundColor(getResources().getColor(R.color.purple_500));
+                    holder.studentNameTextView.setTextColor(Color.WHITE);
+                    holder.studentUsernameTextView.setTextColor(Color.WHITE);
                 }else {
                     holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.WHITE);
+                    holder.studentNameTextView.setTextColor(Color.BLACK);
+                    holder.studentUsernameTextView.setTextColor(Color.BLACK);
                 }
             }
             holder.studentNameTextView.setText(myObject.getName());
@@ -184,7 +219,9 @@ public class SelectPlayerActivity extends AppCompatActivity {
                     notifyItemChanged(pos);
                 }
                 pos = p;
-                holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.YELLOW);
+                holder.relativeLayoutPlayerInfo.setBackgroundColor(getResources().getColor(R.color.purple_500));
+                holder.studentNameTextView.setTextColor(Color.WHITE);
+                holder.studentUsernameTextView.setTextColor(Color.WHITE);
                 pos=p;
                 username= myObject.getUsername();
 

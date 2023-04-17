@@ -12,6 +12,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -35,10 +37,14 @@ import java.util.Calendar;
 
 public class ShowScoreActivity extends AppCompatActivity {
     private IntentFilter intentFilter;
+    double scoreDouble;
     View progressOverlay;
+    String gameName,dateAndTime,username;
+    TextView scoreValue;
     AlphaAnimation inAnimation;
     Button goToHomeButton;
-    Button playAgainButton;
+    boolean scoreSaved=false;
+    Button playAgainButton,saveScoreButton;
     ImageView animatedGif;
     AlphaAnimation outAnimation;
     private FirebaseUser user;
@@ -66,6 +72,11 @@ public class ShowScoreActivity extends AppCompatActivity {
             }
         }
     };
+    public boolean isInternetConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,15 +89,17 @@ public class ShowScoreActivity extends AppCompatActivity {
         };
         this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_show_score);
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
-        if(user==null){
-            Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
-            Intent gotToLoginPage = new Intent(ShowScoreActivity.this, LoginOrSignUpActivity.class);
-            startActivity(gotToLoginPage);
-            finishAffinity();
-            finish();
-            return;
+        if(isInternetConnected(this)){
+            FirebaseAuth mAuth = FirebaseAuth.getInstance();
+            user = mAuth.getCurrentUser();
+            if(user==null){
+                Toast.makeText(this, "Please login again", Toast.LENGTH_SHORT).show();
+                Intent gotToLoginPage = new Intent(ShowScoreActivity.this, LoginOrSignUpActivity.class);
+                startActivity(gotToLoginPage);
+                finishAffinity();
+                finish();
+                return;
+            }
         }
         intentFilter= new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -98,13 +111,18 @@ public class ShowScoreActivity extends AppCompatActivity {
     public void initialize(){
         totalAttempts = getIntent().getIntExtra("TotalAttempts", 0);
         correctAttempts = getIntent().getIntExtra("CorrectAttempts", 0);
-        String gameName = getIntent().getStringExtra("gameName");
-        String username = getIntent().getStringExtra("username");
-        String dateAndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-        TextView scoreValue = findViewById(R.id.scoreValue);
+        gameName = getIntent().getStringExtra("gameName");
+        username = getIntent().getStringExtra("username");
+        dateAndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
+        scoreDouble=  correctAttempts-(0.5*(totalAttempts-correctAttempts));
+        if(scoreDouble<0){
+            scoreDouble=0;
+        }
+        scoreValue = findViewById(R.id.scoreValue);
         goToHomeButton = findViewById(R.id.goToHomeButton);
         playAgainButton =findViewById(R.id.playAgainButton);
         progressOverlay =findViewById(R.id.progress_overlay);
+        saveScoreButton=findViewById(R.id.saveScoreButton);
         animatedGif=findViewById(R.id.animatedGif);
         animatedGif.setVisibility(View.INVISIBLE);
         outAnimation = new AlphaAnimation(1f, 0f);
@@ -113,9 +131,20 @@ public class ShowScoreActivity extends AppCompatActivity {
         inAnimation.setDuration(200);
         goToHomeButton.setOnClickListener(this::onClick);
         playAgainButton.setOnClickListener(this::onClick);
+        saveScoreButton.setEnabled(false);
+        saveScoreButton.setVisibility(View.INVISIBLE);
         mediaPlayer = MediaPlayer.create(this, R.raw.win);
         progressOverlay.setAnimation(inAnimation);
         progressOverlay.setVisibility(View.VISIBLE);
+        if(isInternetConnected(this)){
+            saveScore();
+        }else{
+            Toast.makeText(this, "Score could not be saved. Please check your connection.", Toast.LENGTH_SHORT).show();
+            saveScoreButton.setEnabled(true);
+            saveScoreButton.setVisibility(View.VISIBLE);
+        }
+    }
+    public void saveScore(){
         Score score = new Score(gameName, dateAndTime,totalAttempts,correctAttempts);
         String userId = user.getUid();
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(userId);
@@ -128,24 +157,30 @@ public class ShowScoreActivity extends AppCompatActivity {
                         snapshot1.getRef().child("Scores").push().setValue(score).addOnCompleteListener(task -> {
                             if(task.isSuccessful()){
                                 Toast.makeText(ShowScoreActivity.this, "Score Saved", Toast.LENGTH_SHORT).show();
+                                saveScoreButton.setEnabled(false);
+                                saveScoreButton.setVisibility(View.INVISIBLE);
+                                scoreSaved=true;
 //                                onClick(goToHomeButton);
                             }else{
                                 Toast.makeText(ShowScoreActivity.this, "Score not saved", Toast.LENGTH_SHORT).show();
+                                saveScoreButton.setEnabled(true);
+                                saveScoreButton.setVisibility(View.VISIBLE);
                             }
                         });
                         break;
                     }
                 }else{
                     Log.i("Snapshot","not found");
+                    saveScoreButton.setEnabled(true);
+                    saveScoreButton.setVisibility(View.VISIBLE);
                 }
                 runOnUiThread(() -> {
-                    scoreValue.setText(String.valueOf( correctAttempts-(0.5*(totalAttempts-correctAttempts))));
+                    scoreValue.setText(String.valueOf(scoreDouble));
                     mediaPlayer.start();
                     animatedGif.setVisibility(View.VISIBLE);
                 });
                 progressOverlay.setAnimation(outAnimation);
                 progressOverlay.setVisibility(View.GONE);
-
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
@@ -153,7 +188,7 @@ public class ShowScoreActivity extends AppCompatActivity {
                 progressOverlay.setAnimation(outAnimation);
                 progressOverlay.setVisibility(View.GONE);
                 runOnUiThread(() -> {
-                    scoreValue.setText(String.valueOf( correctAttempts-(0.5*(totalAttempts-correctAttempts))));
+                    scoreValue.setText(String.valueOf(scoreDouble));
                     mediaPlayer.start();
                     animatedGif.setVisibility(View.VISIBLE);
                 });
@@ -174,6 +209,12 @@ public class ShowScoreActivity extends AppCompatActivity {
             Intent i = new Intent(ShowScoreActivity.this, SelectGameActivity.class);
 //            mediaPlayer.release();
             startActivity(i);
+        }else if(view.getId()==R.id.saveScoreButton){
+            if (isInternetConnected(this)){
+                saveScore();
+            }else{
+                Toast.makeText(this, "Check your connection first.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
     @Override

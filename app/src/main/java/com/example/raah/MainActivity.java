@@ -19,6 +19,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -132,7 +134,7 @@ public class MainActivity extends AppCompatActivity{
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         startButton.setEnabled(false);
         returned_value = getIntent().getIntExtra("ConnectionStatus",0);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
             if (checkPermission(permissions)) {
                 ActivityCompat.requestPermissions(this, permissions, 1);
             }
@@ -207,7 +209,7 @@ public class MainActivity extends AppCompatActivity{
                 // Bluetooth is not enabled :)
                 Toast.makeText(mContext, "Bluetooth not enabled. Please enable bluetooth to proceed", Toast.LENGTH_SHORT).show();
             } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {  // Only ask for these permissions on runtime when running Android 6.0 or higher
                     if (checkPermission(permissions)) {
                         ActivityCompat.requestPermissions(this, permissions, 1);
                     }
@@ -222,15 +224,27 @@ public class MainActivity extends AppCompatActivity{
             startActivity(intent);
         });
         playerListButton.setOnClickListener(view -> {
+            if(!isInternetConnected(this)){
+                Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent intent = new Intent(MainActivity.this,PlayerListActivity.class);
             startActivity(intent);
         });
         addNewPlayerButton.setOnClickListener(view -> {
+            if(!isInternetConnected(this)){
+                Toast.makeText(this, "Please connect to internet.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent addPlayerIntent = new Intent(MainActivity.this,AddPlayerActivity.class);
             startActivity(addPlayerIntent);
         });
     }
-
+    public boolean isInternetConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
     @Override
     protected void onResume() {
         super.onResume();

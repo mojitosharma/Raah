@@ -5,6 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".ShowScoreActivity">
   <include layout="@layout/layout_progress_overlay"/>
   <RelativeLayout
@@ -23,9 +24,11 @@
 
     <TextView
         android:id="@+id/scoreValue"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
+        android:gravity="center"
         android:layout_height="wrap_content"
-        android:textSize="35sp"
+        android:textSize="50sp"
+        android:textStyle="bold|italic"
         android:layout_below="@id/scoreText"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp" />
@@ -34,6 +37,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/congo"
+        android:paddingHorizontal="10dp"
         android:layout_below="@id/scoreValue"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
@@ -63,6 +67,14 @@
         android:layout_height="wrap_content"
         android:text="@string/go_to_home"
         android:layout_below="@id/playAgainButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp" />
+    <Button
+        android:id="@+id/saveScoreButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save Score"
+        android:layout_below="@id/goToHomeButton"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="5dp" />
 
