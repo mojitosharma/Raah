@@ -9,9 +9,6 @@
         android:id="@+id/linearLayoutDeviceInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,12 +18,14 @@
             android:id="@+id/textViewDeviceName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:padding="10dp"
             android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/textViewDeviceAddress"
             android:layout_width="match_parent"
+            android:padding="5dp"
             android:layout_height="wrap_content" />
     </LinearLayout>
 
@@ -34,9 +33,6 @@
         android:id="@+id/divider"
         android:layout_width="0dp"
         android:layout_height="1dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
         android:background="?android:attr/listDivider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

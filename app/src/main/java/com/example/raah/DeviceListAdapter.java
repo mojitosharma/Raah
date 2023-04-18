@@ -3,6 +3,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -52,28 +53,34 @@ public class DeviceListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     @Override
     public void onBindViewHolder(@NonNull final RecyclerView.ViewHolder holder, final int position) {
         ViewHolder itemHolder = (ViewHolder) holder;
+        int p = itemHolder.getAdapterPosition();
         final DeviceInfoModel deviceInfoModel = (DeviceInfoModel) deviceList.get(position);
-        final BluetoothDevice device = context.devices.get(position);
+        if(context.pos==-1){
+            ((ViewHolder) holder).linearLayout.setBackgroundColor(Color.WHITE);
+        }else {
+            if(context.pos==p){
+                ((ViewHolder) holder).linearLayout.setBackgroundColor(context.getResources().getColor(R.color.selectedPlayer));
+            }else {
+                ((ViewHolder) holder).linearLayout.setBackgroundColor(Color.WHITE);
+            }
+        }
         itemHolder.textName.setText(deviceInfoModel.getDeviceName());
         itemHolder.textAddress.setText(deviceInfoModel.getDeviceHardwareAddress());
 
         // When a device is selected
         itemHolder.linearLayout.setOnClickListener(view -> {
 //            context.bluetoothAdapter.cancelDiscovery();
-            if(!context.pairedDevices.contains(deviceInfoModel.getDeviceHardwareAddress())){
-                device.createBond();
-            }else{
-                Intent i = null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    i = new Intent(context, MainActivity.class);
-                }
-                // Send device details to the MainActivity
-                Variables.deviceName = device.getName();
-                Variables.deviceAddress = device.getAddress();
-                Toast.makeText(context, "Paired to "+device.getName(), Toast.LENGTH_SHORT).show();
-                // Call MainActivity
-                context.startActivity(i);
+            context.selectDeviceStartButton.setEnabled(true);
+            if(context.pos!=p){
+                notifyItemChanged(context.pos);
             }
+            context.pos = p;
+            ((ViewHolder) holder).linearLayout.setBackgroundColor(context.getResources().getColor(R.color.selectedPlayer));
+//                holder.studentNameTextView.setTextColor(Color.WHITE);
+//                holder.studentUsernameTextView.setTextColor(Color.WHITE);
+            context.pos=p;
+            context.deviceAddress= deviceInfoModel.getDeviceHardwareAddress();
+            context.deviceName = deviceInfoModel.getDeviceName();
         });
     }
 

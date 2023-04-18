@@ -20,6 +20,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,8 +34,12 @@ import java.util.Set;
 public class SelectDeviceActivity extends AppCompatActivity {
     List<Object> deviceList = new ArrayList<>();
     ArrayList<String> addresses= new ArrayList<>();
+    int pos=-1;
+    String deviceName="";
+    String deviceAddress="";
     boolean isDiscovering=false;
     DeviceListAdapter deviceListAdapter;
+    Button selectDeviceBackButton,selectDeviceStartButton;
     IntentFilter deviceFoundFilter,pairedRequestFilter,bondFilter;
     ArrayList<BluetoothDevice> devices;
     ArrayList<String> pairedDevices= new ArrayList<>();
@@ -162,6 +167,29 @@ public class SelectDeviceActivity extends AppCompatActivity {
             // Display paired device using recyclerView
         scanTextView= findViewById(R.id.scanTextView);
         RecyclerView recyclerView = findViewById(R.id.recyclerViewDevice);
+        selectDeviceStartButton=findViewById(R.id.selectDeviceStartButton);
+        selectDeviceStartButton.setEnabled(false);
+        selectDeviceBackButton = findViewById(R.id.selectDeviceBackButton);
+        selectDeviceBackButton.setOnClickListener(view->onBackPressed());
+        selectDeviceStartButton.setOnClickListener(view -> {
+            BluetoothDevice myDevice = devices.get(pos);
+            if(!deviceName.equals("") && !deviceAddress.equals("")){
+                if(!pairedDevices.contains(deviceAddress)){
+                    myDevice.createBond();
+                }else{
+                    Intent i = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                        i = new Intent(SelectDeviceActivity.this, MainActivity.class);
+                    }
+                    // Send device details to the MainActivity
+                    Variables.deviceName = myDevice.getName();
+                    Variables.deviceAddress = myDevice.getAddress();
+                    Toast.makeText(this, "Paired to "+myDevice.getName(), Toast.LENGTH_SHORT).show();
+                    // Call MainActivity
+                    startActivity(i);
+                }
+            }
+        });
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         devices = new ArrayList<>(bluetoothAdapter.getBondedDevices());
         if (devices.size() > 0) {

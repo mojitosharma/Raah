@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     tools:context=".ShowScoreActivity">
-  <include layout="@layout/layout_progress_overlay"/>
   <RelativeLayout
       android:layout_width="match_parent"
       android:layout_height="match_parent">
@@ -30,6 +29,7 @@
         android:textSize="50sp"
         android:textStyle="bold|italic"
         android:layout_below="@id/scoreText"
+        android:textColor="@color/black"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp" />
     <pl.droidsonroids.gif.GifImageView
@@ -58,6 +58,8 @@
         android:layout_height="wrap_content"
         android:text="Play Again"
         android:layout_below="@id/animatedGif"
+        android:backgroundTint="@color/button_background_greenish"
+        android:textColor="@color/text_button"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="5dp" />
 
@@ -66,6 +68,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/go_to_home"
+        android:backgroundTint="@color/button_background_redish"
+        android:textColor="@color/text_button"
         android:layout_below="@id/playAgainButton"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="5dp" />
@@ -75,11 +79,13 @@
         android:layout_height="wrap_content"
         android:text="Save Score"
         android:layout_below="@id/goToHomeButton"
+        android:backgroundTint="@color/button_background_bluish"
+        android:textColor="@color/text_button"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="5dp" />
 
 
   </RelativeLayout>
-
+  <include layout="@layout/layout_progress_overlay" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -39,6 +39,7 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
     String username = "";
+    String name="";
     Toolbar toolbarStudentProfile;
     RecyclerView scoreListRecyclerView;
     ArrayList<Score> dataList;
@@ -63,10 +64,16 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
         this.getOnBackPressedDispatcher().addCallback(this, callback);
         setContentView(R.layout.activity_show_student_profile);
         username = getIntent().getStringExtra("username");
+        name =getIntent().getStringExtra("name");
         progressOverlay =findViewById(R.id.progress_overlay);
         toolbarStudentProfile = findViewById(R.id.toolbarStudentProfile);
+        scoreListRecyclerView = findViewById(R.id.scoreListRecyclerView);
+        refreshProfileButton=findViewById(R.id.refreshProfileButton);
+        scoreListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        dataList = new ArrayList<>();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            toolbarStudentProfile.setTitle(username);
+            toolbarStudentProfile.setSubtitle(username);
+            toolbarStudentProfile.setTitle(name);
         }
         outAnimation = new AlphaAnimation(1f, 0f);
         outAnimation.setDuration(200);
@@ -96,10 +103,6 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
     public void loadData(){
         refreshProfileButton.setEnabled(false);
         String uid = user.getUid();
-        scoreListRecyclerView = findViewById(R.id.scoreListRecyclerView);
-        refreshProfileButton=findViewById(R.id.refreshProfileButton);
-        scoreListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        dataList = new ArrayList<>();
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("teachers").child(uid);
         Query query = userRef.orderByChild("username").equalTo(username);
         query.addListenerForSingleValueEvent(new ValueEventListener() {

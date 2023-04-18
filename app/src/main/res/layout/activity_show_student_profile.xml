@@ -26,7 +26,6 @@
             android:src="@drawable/baseline_refresh_24"
             android:contentDescription="Refresh" />
     </androidx.appcompat.widget.Toolbar>
-    <include layout="@layout/layout_progress_overlay"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/scoreListRecyclerView"
@@ -37,5 +36,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbarStudentProfile"
         />
+    <include layout="@layout/layout_progress_overlay" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

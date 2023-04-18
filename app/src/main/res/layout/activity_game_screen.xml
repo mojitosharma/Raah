@@ -70,6 +70,8 @@
             android:layout_gravity="center"
             android:layout_weight="1"
             android:layout_marginStart="30dp"
+            android:backgroundTint="@color/button_background_redish"
+            android:textColor="@color/text_button"
             android:layout_marginEnd="15dp"
             android:id="@+id/gameScreenResetButton"/>
         <Button
@@ -77,6 +79,8 @@
             android:layout_height="wrap_content"
             android:text="@string/pass"
             android:layout_gravity="center"
+            android:backgroundTint="@color/button_background_yellowish"
+            android:textColor="@color/text_button"
             android:layout_weight="1"
             android:layout_marginStart="30dp"
             android:layout_marginEnd="15dp"
@@ -87,6 +91,8 @@
             android:text="@string/next"
             android:layout_gravity="center"
             android:layout_marginEnd="30dp"
+            android:backgroundTint="@color/button_background_bluish"
+            android:textColor="@color/text_button"
             android:layout_marginStart="15dp"
             android:layout_weight="1"
             android:id="@+id/gameScreenNextButton"/>

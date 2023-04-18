@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".PlayerListActivity">
-  <include layout="@layout/layout_progress_overlay"/>
   <androidx.appcompat.widget.Toolbar
       android:id="@+id/toolbarPlayerListActivity"
       android:layout_width="match_parent"
@@ -37,6 +36,7 @@
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintTop_toBottomOf="@+id/toolbarPlayerListActivity"
       app:layout_constraintBottom_toBottomOf="parent"/>
+  <include layout="@layout/layout_progress_overlay" />
 
 
   </androidx.constraintlayout.widget.ConstraintLayout>

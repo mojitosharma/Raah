@@ -23,62 +23,49 @@
         android:id="@+id/selectGameLL1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginHorizontal="30dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         android:orientation="vertical">
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_gravity="top"
-            android:background="?android:attr/listDivider" />
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="30sp"
+            android:textColor="@color/black"
             android:layout_gravity="center"
             android:gravity="center"
             android:padding="10dp"
+            android:layout_margin="10dp"
+            android:background="@drawable/border_text_view"
             android:text="@string/hop_0_to_9"
             android:id="@+id/game1TextView"/>
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:background="?android:attr/listDivider"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="30sp"
+            android:layout_margin="10dp"
+            android:background="@drawable/border_text_view"
+            android:textColor="@color/black"
             android:padding="10dp"
             android:text="@string/hop_even_numbers"
             android:layout_gravity="center"
             android:gravity="center"
             android:id="@+id/game2TextView"/>
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:background="?android:attr/listDivider"/>
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="30sp"
             android:text="@string/hop_odd_numbers"
             android:padding="10dp"
+            android:background="@drawable/border_text_view"
+            android:layout_margin="10dp"
             android:layout_gravity="center"
             android:gravity="center"
+            android:textColor="@color/black"
             android:id="@+id/game3TextView"/>
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:background="?android:attr/listDivider"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

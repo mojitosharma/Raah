@@ -47,4 +47,5 @@
     <string name="reset">Reset</string>
     <string name="forgot_password_click_here_to_reset">Forgot Password? Click here to reset</string>
     <string name="pass">Pass</string>
+    <string name="connect">Connect</string>
 </resources>

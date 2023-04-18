@@ -177,7 +177,7 @@ public class GameScreen extends AppCompatActivity implements View.OnClickListene
                 nextTextView.setText("Over");
                 currTextView.setText(String.valueOf(curr));
                 prevTextView.setText(String.valueOf(prev));
-                mediaPlayerCorrect.start();
+//                mediaPlayerCorrect.start();
             }else if(curr<9){
                 next+=diff;
                 nextTextView.setText(String.valueOf(next));

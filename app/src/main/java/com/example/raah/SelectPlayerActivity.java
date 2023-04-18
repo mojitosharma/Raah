@@ -198,17 +198,17 @@ public class SelectPlayerActivity extends AppCompatActivity {
             final Student myObject = dataList.get(p);
             if(pos==-1){
                 holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.WHITE);
-                holder.studentNameTextView.setTextColor(Color.BLACK);
-                holder.studentUsernameTextView.setTextColor(Color.BLACK);
+//                holder.studentNameTextView.setTextColor(Color.BLACK);
+//                holder.studentUsernameTextView.setTextColor(Color.BLACK);
             }else {
                 if(pos==p){
-                    holder.relativeLayoutPlayerInfo.setBackgroundColor(getResources().getColor(R.color.purple_500));
-                    holder.studentNameTextView.setTextColor(Color.WHITE);
-                    holder.studentUsernameTextView.setTextColor(Color.WHITE);
+                    holder.relativeLayoutPlayerInfo.setBackgroundColor(getResources().getColor(R.color.selectedPlayer));
+//                    holder.studentNameTextView.setTextColor(Color.WHITE);
+//                    holder.studentUsernameTextView.setTextColor(Color.WHITE);
                 }else {
                     holder.relativeLayoutPlayerInfo.setBackgroundColor(Color.WHITE);
-                    holder.studentNameTextView.setTextColor(Color.BLACK);
-                    holder.studentUsernameTextView.setTextColor(Color.BLACK);
+//                    holder.studentNameTextView.setTextColor(Color.BLACK);
+//                    holder.studentUsernameTextView.setTextColor(Color.BLACK);
                 }
             }
             holder.studentNameTextView.setText(myObject.getName());
@@ -219,9 +219,9 @@ public class SelectPlayerActivity extends AppCompatActivity {
                     notifyItemChanged(pos);
                 }
                 pos = p;
-                holder.relativeLayoutPlayerInfo.setBackgroundColor(getResources().getColor(R.color.purple_500));
-                holder.studentNameTextView.setTextColor(Color.WHITE);
-                holder.studentUsernameTextView.setTextColor(Color.WHITE);
+                holder.relativeLayoutPlayerInfo.setBackgroundColor(getResources().getColor(R.color.selectedPlayer));
+//                holder.studentNameTextView.setTextColor(Color.WHITE);
+//                holder.studentUsernameTextView.setTextColor(Color.WHITE);
                 pos=p;
                 username= myObject.getUsername();
 

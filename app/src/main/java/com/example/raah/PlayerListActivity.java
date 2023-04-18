@@ -159,6 +159,7 @@ public class PlayerListActivity extends AppCompatActivity {
                 if(isInternetConnected(view.getContext())){
                     Intent intent = new Intent(PlayerListActivity.this, ShowStudentProfileActivity.class);
                     intent.putExtra("username", myObject.getUsername());
+                    intent.putExtra("name",myObject.getName());
                     startActivity(intent);
                 }else{
                     Toast.makeText(PlayerListActivity.this, "Please check your internet connection.", Toast.LENGTH_SHORT).show();

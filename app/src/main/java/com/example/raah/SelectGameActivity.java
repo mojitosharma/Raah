@@ -2,6 +2,7 @@ package com.example.raah;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -82,30 +83,21 @@ public class SelectGameActivity extends AppCompatActivity implements View.OnClic
         int id = view.getId();
         if(id==R.id.game1TextView){
             selectGameNextButton.setEnabled(true);
-            game1TextView.setBackgroundColor(getResources().getColor(R.color.purple_500));
-            game2TextView.setBackgroundColor(Color.WHITE);
-            game3TextView.setBackgroundColor(Color.WHITE);
-            game1TextView.setTextColor(Color.WHITE);
-            game2TextView.setTextColor(Color.BLACK);
-            game3TextView.setTextColor(Color.BLACK);
+            game1TextView.setBackgroundResource(R.drawable.border_text_view_yellowish);
+            game2TextView.setBackgroundResource(R.drawable.border_text_view);
+            game3TextView.setBackgroundResource(R.drawable.border_text_view);
             gameName="Hop 0 to 9";
         }else if(id==R.id.game2TextView){
             selectGameNextButton.setEnabled(true);
-            game1TextView.setBackgroundColor(Color.WHITE);
-            game2TextView.setBackgroundColor(getResources().getColor(R.color.purple_500));
-            game3TextView.setBackgroundColor(Color.WHITE);
-            game1TextView.setTextColor(Color.BLACK);
-            game2TextView.setTextColor(Color.WHITE);
-            game3TextView.setTextColor(Color.BLACK);
+            game1TextView.setBackgroundResource(R.drawable.border_text_view);
+            game2TextView.setBackgroundResource(R.drawable.border_text_view_bluish);
+            game3TextView.setBackgroundResource(R.drawable.border_text_view);
             gameName="Hop Even Numbers";
         }else if (id ==R.id.game3TextView){
             selectGameNextButton.setEnabled(true);
-            game1TextView.setBackgroundColor(Color.WHITE);
-            game2TextView.setBackgroundColor(Color.WHITE);
-            game3TextView.setBackgroundColor(getResources().getColor(R.color.purple_500));
-            game1TextView.setTextColor(Color.BLACK);
-            game2TextView.setTextColor(Color.BLACK);
-            game3TextView.setTextColor(Color.WHITE);
+            game1TextView.setBackgroundResource(R.drawable.border_text_view);
+            game2TextView.setBackgroundResource(R.drawable.border_text_view);
+            game3TextView.setBackgroundResource(R.drawable.border_text_view_greenish);
             gameName="Hop Odd Numbers";
         }else if(id==R.id.selectGameBackButton){
             onBackPressed();
