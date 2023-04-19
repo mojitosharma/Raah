@@ -15,7 +15,7 @@
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
         app:subtitleTextColor="@android:color/background_light"
-        app:title="Select Player"
+        app:title="Select Student"
         app:titleTextColor="@android:color/background_light" >
         <ImageView
             android:layout_width="wrap_content"

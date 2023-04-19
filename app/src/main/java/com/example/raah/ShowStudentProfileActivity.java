@@ -71,7 +71,7 @@ public class ShowStudentProfileActivity extends AppCompatActivity {
         refreshProfileButton=findViewById(R.id.refreshProfileButton);
         scoreListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         dataList = new ArrayList<>();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             toolbarStudentProfile.setSubtitle(username);
             toolbarStudentProfile.setTitle(name);
         }

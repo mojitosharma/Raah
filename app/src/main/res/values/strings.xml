@@ -48,4 +48,6 @@
     <string name="forgot_password_click_here_to_reset">Forgot Password? Click here to reset</string>
     <string name="pass">Pass</string>
     <string name="connect">Connect</string>
+    <string name="play_game">Play Game</string>
+    <string name="connect_bluetooth">Connect Bluetooth</string>
 </resources>

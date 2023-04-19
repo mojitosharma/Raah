@@ -233,6 +233,7 @@ public class SelectDeviceActivity extends AppCompatActivity {
                     pairedDevices.add(deviceHardwareAddress);
                 }
             }
+            deviceListAdapter.notifyDataSetChanged();
             scanTextView.setEnabled(false);
             scanTextView.setTextColor(Color.GRAY);
             bluetoothAdapter.startDiscovery();

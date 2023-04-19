@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+
 import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginOrSignUpActivity extends AppCompatActivity {
@@ -39,7 +40,7 @@ public class LoginOrSignUpActivity extends AppCompatActivity {
         logoImageViewIntro = findViewById(R.id.logoImageViewIntro);
         logInButtonIntro = findViewById(R.id.logInButtonIntro);
         signUpButtonIntro = findViewById(R.id.signUpButtonIntro);
-        logoImageViewIntro.setImageResource(R.drawable.raah);
+        logoImageViewIntro.setImageResource(R.drawable.logo_img);
         logInButtonIntro.setOnClickListener(view -> {
             if(isInternetConnected(this)){
                 intent.putExtra("loginOrSignUp", "login");

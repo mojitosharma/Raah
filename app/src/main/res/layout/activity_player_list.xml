@@ -17,7 +17,7 @@
       app:layout_constraintTop_toTopOf="parent"
       android:theme="?attr/actionBarTheme"
       app:subtitleTextColor="@android:color/background_light"
-      app:title="Player List"
+      app:title="Student List"
       app:titleTextColor="@android:color/background_light" >
     <ImageView
         android:layout_width="wrap_content"
