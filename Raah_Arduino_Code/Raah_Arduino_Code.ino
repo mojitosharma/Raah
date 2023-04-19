@@ -46,16 +46,16 @@ void loop(){
 
   long n[10];
   // read the values of the capacitivesensor
-  n[0] = (long)number0.capacitiveSensor(11);
-  n[1] = (long)number1.capacitiveSensor(11);
-  n[2] = (long)number2.capacitiveSensor(11);
-  n[3] = (long)number3.capacitiveSensor(11);
-  n[4] = (long)number4.capacitiveSensor(11);
-  n[5] = (long)number5.capacitiveSensor(11);
-  n[6] = (long)number6.capacitiveSensor(11);
-  n[7] = (long)number7.capacitiveSensor(11);
-  n[8] = (long)number8.capacitiveSensor(11);
-  n[9] = (long)number9.capacitiveSensor(11);
+  n[0] = (long)number0.capacitiveSensor(20);
+  n[1] = (long)number1.capacitiveSensor(20);
+  n[2] = (long)number2.capacitiveSensor(20);
+  n[3] = (long)number3.capacitiveSensor(20);
+  n[4] = (long)number4.capacitiveSensor(20);
+  n[5] = (long)number5.capacitiveSensor(20);
+  n[6] = (long)number6.capacitiveSensor(20);
+  n[7] = (long)number7.capacitiveSensor(20);
+  n[8] = (long)number8.capacitiveSensor(20);
+  n[9] = (long)number9.capacitiveSensor(20);
   
   for(int i=0; i<10; i++){
     // update the average value 
@@ -86,5 +86,6 @@ void loop(){
   // if the system is on then send the flag {flag stored value of the greatest number that was touched
   if(msg == 1 && flag > -1){
       Serial.print(flag); // Send -1 back to the Bluetooth module indicating incorrect value
+      Serial.flush();
   }
 }
